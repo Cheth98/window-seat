@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Window Seat 🚗</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F0EEFB;}
+.app-shell{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px;}
+.app{width:100%;max-width:420px;margin:0 auto;background:#FDFBFF;border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(83,74,183,.15);}
+.screen{display:none;flex-direction:column;min-height:100vh;}
+.screen.active{display:flex;}
+.scroll{flex:1;overflow-y:auto;padding:0 16px 24px;}
+.bnav{display:flex;border-top:1.5px solid #EEEDFE;background:#FDFBFF;position:sticky;bottom:0;z-index:10;}
+.bnav-btn{flex:1;min-width:18%;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;background:none;border:none;cursor:pointer;font-size:9px;color:#AFA9EC;}
+.bnav-btn svg{display:block;}
+.bnav-btn.on{color:#534AB7;}
+.bnav-btn.on svg{stroke:#534AB7;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1.5px solid #EEEDFE;background:#FDFBFF;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:16px;font-weight:600;color:#3C3489;}
+.back-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;color:#7F77DD;}
+.back-btn svg{stroke:#7F77DD;}
+.sec-lbl{font-size:11px;font-weight:600;color:#AFA9EC;letter-spacing:.07em;text-transform:uppercase;margin:18px 0 8px;}
+.card{background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:14px;margin-bottom:10px;}
+.pill{display:inline-flex;align-items:center;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.p-purple{background:#EEEDFE;color:#534AB7;}.p-teal{background:#E1F5EE;color:#0F6E56;}.p-blue{background:#E6F1FB;color:#185FA5;}.p-amber{background:#FAEEDA;color:#854F0B;}.p-green{background:#EAF3DE;color:#3B6D11;}.p-pink{background:#FBEAF0;color:#993556;}.p-orange{background:#FFF0E0;color:#9B4A00;}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.stat-c{border-radius:12px;padding:14px;border:1px solid #EEEDFE;}
+.stat-lbl{font-size:11px;color:#534AB7;margin-bottom:4px;font-weight:600;}
+.stat-val{font-size:22px;font-weight:600;color:#3C3489;}
+.stat-unit{font-size:11px;color:#AFA9EC;font-weight:400;}
+.add-btn{width:100%;padding:12px 14px;border-radius:12px;border:none;background:#534AB7;color:#fff;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;text-decoration:none;line-height:1;}
+.add-btn svg,.primary-btn svg,.small-btn svg{vertical-align:middle;}
+.add-btn:hover{background:#3C3489;}.add-btn:active{transform:scale(.98);}
+.add-btn.teal{background:#0F6E56;}.add-btn.teal:hover{background:#085041;}
+.add-btn.green{background:#1D9E75;}.add-btn.green:hover{background:#0F6E56;}
+.primary-btn{width:100%;padding:13px;border-radius:12px;background:#7F77DD;color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.primary-btn:hover{background:#534AB7;}.primary-btn:active{transform:scale(.98);}
+.small-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap;}
+.edit-btn{background:#534AB7;color:#fff;}.edit-btn:hover{background:#3C3489;}
+.save-btn{background:#1D9E75;color:#fff;}.save-btn:hover{background:#0F6E56;}
+.del-btn{background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:12px;padding:6px 10px;border-radius:6px;flex-shrink:0;display:inline-flex;align-items:center;gap:4px;}
+.del-btn:hover{background:#F4C0D1;}
+.icon-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;color:#AFA9EC;}
+.stop-row-wrap{background:#fff;border:1px solid #EEEDFE;border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.stop-row{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;cursor:pointer;}
+.stop-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.cat-tag{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px;}
+.maps-link{font-size:11px;color:#7F77DD;display:inline-flex;align-items:center;gap:3px;margin-top:3px;text-decoration:none;}
+.maps-link:hover{text-decoration:underline;}
+.stop-edit{background:#F7F5FF;border-top:1px solid #EEEDFE;padding:14px 14px 16px;}
+.hl-card{background:#F7F5FF;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #EEEDFE;display:flex;align-items:flex-start;gap:10px;}
+.hl-text{font-size:14px;color:#3C3489;line-height:1.5;flex:1;}
+.hl-del{background:none;border:none;cursor:pointer;color:#AFA9EC;padding:2px;flex-shrink:0;display:flex;align-items:center;}
+.hl-del:hover{color:#993556;}
+.photo-album-tile{border-radius:14px;overflow:hidden;background:#EEEDFE;margin-bottom:10px;}
+.photo-album-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;}
+.photo-album-item{border-radius:8px;aspect-ratio:1;overflow:hidden;background:#D8D4FA;cursor:pointer;}
+.photo-album-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.game-tile{background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
+.game-tile:hover{border-color:#AFA9EC;}
+.game-tile-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.song-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #EEEDFE;border-radius:10px;margin-bottom:8px;}
+.song-link{font-size:11px;color:#1DB954;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:3px;}
+.link-preview{background:#F3F0FE;border-radius:8px;padding:10px 12px;margin-top:8px;display:none;border:1px solid #CECBF6;}
+.link-preview-title{font-size:13px;font-weight:500;color:#3C3489;}
+.link-preview-sub{font-size:11px;color:#AFA9EC;margin-top:2px;}
+.note-card{background:#F7F5FF;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #EEEDFE;}
+.note-text{font-size:14px;color:#3C3489;line-height:1.6;}
+.wrap-photo{border-radius:8px;aspect-ratio:1;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;position:relative;}
+.wrap-photo img{width:100%;height:100%;object-fit:cover;}
+.toast{background:#534AB7;color:#fff;font-size:13px;padding:9px 20px;border-radius:22px;text-align:center;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;}
+.form-lbl{font-size:12px;color:#534AB7;margin-bottom:5px;display:block;margin-top:13px;font-weight:600;}
+input[type=text],input[type=url],textarea,select{width:100%;padding:10px 13px;border:1.5px solid #CECBF6;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#3C3489;resize:none;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#7F77DD;}
+textarea{min-height:64px;}
+.av-circle{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid transparent;cursor:pointer;transition:border-color .15s,transform .12s;}
+.av-circle:hover{transform:scale(1.06);}
+.av-circle.picked{border-color:#534AB7;}
+.av-name-lbl{font-size:11px;color:#534AB7;font-weight:600;text-align:center;margin-top:3px;}
+.crew-card{background:#F7F5FF;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #EEEDFE;}
+.form-box{background:#F7F5FF;border-radius:12px;padding:14px;margin-top:10px;border:1px solid #EEEDFE;}
+.countdown-box{background:linear-gradient(135deg,#EEEDFE,#E1F5EE);border-radius:14px;padding:18px;display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:4px;border:1px solid #CECBF6;}
+.countdown-unit{text-align:center;background:#fff;border-radius:12px;padding:12px 16px;min-width:64px;border:1px solid #EEEDFE;}
+.countdown-num{font-size:28px;font-weight:700;color:#3C3489;}
+.countdown-lbl{font-size:10px;color:#AFA9EC;text-transform:uppercase;letter-spacing:.06em;}
+.countdown-sep{font-size:24px;font-weight:600;color:#AFA9EC;margin-top:-10px;}
+.pack-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F3F0FE;}
+.exp-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F3F0FE;}
+.notif-banner{background:linear-gradient(135deg,#EEEDFE,#E1F5EE);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #CECBF6;display:flex;align-items:flex-start;gap:10px;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:5px;}
+.notif-text{font-size:13px;color:#3C3489;flex:1;line-height:1.5;}
+.notif-time{font-size:10px;color:#AFA9EC;margin-top:2px;}
+.notif-close{background:none;border:none;cursor:pointer;color:#AFA9EC;flex-shrink:0;padding:2px;display:flex;}
+.notif-close:hover{color:#534AB7;}
+@media(max-width:480px){.app-shell{padding:0;}.app{border-radius:0;min-height:100vh;}.screen{min-height:100vh;}}
+/* ── APP HOME ── */
+.trip-card{background:#fff;border:1px solid #EEEDFE;border-radius:18px;margin-bottom:14px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .1s;}
+.trip-card:hover{box-shadow:0 4px 20px rgba(83,74,183,.12);transform:translateY(-1px);}
+.trip-card-header{padding:18px 18px 12px;display:flex;align-items:flex-start;gap:12px;}
+.trip-card-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.trip-card-actions{border-top:1px solid #EEEDFE;padding:10px 16px;display:flex;gap:8px;background:#FDFBFF;}
+.invite-box{background:linear-gradient(135deg,#EEEDFE,#E6F1FB);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #CECBF6;}
+.invite-url{font-size:11px;color:#534AB7;word-break:break-all;background:#fff;border-radius:8px;padding:8px 10px;margin-top:6px;border:1px solid #CECBF6;font-family:monospace;}
+/* ── CREATE TRIP ── */
+.step-indicator{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#CECBF6;transition:background .2s;}
+.step-dot.active{background:#534AB7;width:24px;border-radius:4px;}
+/* ── AVATAR CUSTOMISER ── */
+.prop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0;}
+.prop-tile{border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:2px solid #EEEDFE;background:#fff;font-size:22px;transition:border-color .15s,background .15s;}
+.prop-tile.sel{border-color:#534AB7;background:#EEEDFE;}
+.prop-tile span{font-size:10px;color:#534AB7;font-weight:500;}
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+.color-swatch{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s,transform .1s;}
+.color-swatch:hover{transform:scale(1.1);}
+.color-swatch.sel{border-color:#26215C;}
+.av-preview-wrap{background:linear-gradient(135deg,#EEEDFE,#E1F5EE);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;}
+/* ── MODAL OVERLAY ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,20,80,.45);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;}
+</style>
+</head>
+<body>
+<div class="app-shell"><div class="app" id="app">
+
+<!-- ═══════════════════════════════════════════
+     APP HOME — the landing page for Window Seat
+     ═══════════════════════════════════════════ -->
+<div class="screen" id="s-app-home">
+  <!-- Header -->
+  <div style="background:linear-gradient(160deg,#26215C 0%,#534AB7 60%,#7F77DD 100%);padding:36px 20px 24px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+      <svg width="44" height="30" viewBox="0 0 80 54"><filter id="gs"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#26215C" flood-opacity=".35"/></filter><g filter="url(#gs)"><rect x="8" y="18" width="64" height="26" rx="8" fill="#fff"/><rect x="14" y="10" width="36" height="18" rx="5" fill="#fff"/></g><rect x="17" y="13" width="14" height="12" rx="3" fill="#B5D4F4"/><rect x="33" y="13" width="14" height="12" rx="3" fill="#FAC775"/><circle cx="22" cy="44" r="6" fill="#534AB7"/><circle cx="22" cy="44" r="3" fill="#EEEDFE"/><circle cx="58" cy="44" r="6" fill="#534AB7"/><circle cx="58" cy="44" r="3" fill="#EEEDFE"/></svg>
+      <div>
+        <div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:-.3px;">Window Seat</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:1px;">Your road trip companion</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll" style="padding-top:16px;">
+    <p class="sec-lbl" style="margin-top:4px;">Your trips</p>
+    <div id="trips-list"></div>
+    <button class="primary-btn" onclick="goTo('s-create-trip');initCreateTrip()" style="margin-top:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create new trip
+    </button>
+    <div style="text-align:center;padding:20px 0 8px;font-size:11px;color:#CECBF6;">
+      Window Seat — made with ✨ for every road trip
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     INVITE ACCEPTED overlay (shown when joining via link)
+     ═══════════════════════════════════════════ -->
+<!-- ═══ INVITE SHEET (tap Invite button on trip card) ═══ -->
+<div class="modal-overlay" id="invite-sheet" onclick="if(event.target===this)closeInviteSheet()">
+  <div class="modal-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-size:17px;font-weight:700;color:#26215C;" id="invite-sheet-title">Invite friends</div>
+      <button onclick="closeInviteSheet()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#AFA9EC;padding:0 4px;line-height:1;">×</button>
+    </div>
+    <div style="font-size:13px;color:#AFA9EC;margin-bottom:20px;" id="invite-sheet-sub">Friends tap the link, pick their avatar, and join instantly.</div>
+    <button onclick="copyInviteSheet()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy invite link
+    </button>
+    <button id="invite-sheet-share-btn" onclick="shareInviteSheet()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#E8FAF2;color:#0F6E56;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share via…
+    </button>
+    <div style="font-size:11px;color:#CECBF6;text-align:center;margin-top:4px;">Anyone with this link can join the trip</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="invite-modal" onclick="if(event.target===this)document.getElementById('invite-modal').classList.remove('open')">
+  <div class="modal-sheet">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:36px;margin-bottom:8px;">🚗</div>
+      <div style="font-size:18px;font-weight:700;color:#3C3489;" id="invite-trip-name">Joining trip…</div>
+      <div style="font-size:13px;color:#AFA9EC;margin-top:4px;" id="invite-sub">Set up your profile to get started</div>
+    </div>
+
+    <!-- MODE A: Trip has pre-configured crew — pick your seat -->
+    <div id="invite-mode-pick" style="display:none;">
+      <div style="font-size:13px;color:#534AB7;font-weight:600;margin-bottom:12px;text-align:center;">Who are you? Pick your seat.</div>
+      <div id="invite-crew-pick" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <div id="invite-pick-confirm" style="display:none;background:#EEEDFE;border-radius:12px;padding:11px 14px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:14px;color:#534AB7;font-weight:600;" id="invite-pick-name"></div>
+      <div style="font-size:10px;color:#AFA9EC;margin-top:2px;">Tap again to deselect</div>
+    </div>
+    <button id="invite-join-btn" onclick="acceptInvitePick()" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:default;background:#CECBF6;color:#fff;transition:background .2s;margin-bottom:8px;">Join trip</button>
+    </div>
+
+    <!-- MODE B: Open trip — create your avatar -->
+    <div id="invite-mode-create" style="display:none;">
+      <label class="form-lbl" style="margin-top:0;">Your name</label>
+      <input type="text" id="invite-name" placeholder="e.g. Priya" oninput="updateInvitePreview()"/>
+      <label class="form-lbl">Pick your prop</label>
+      <div class="prop-grid" id="invite-prop-grid"></div>
+      <label class="form-lbl">Avatar colour</label>
+      <div class="color-grid" id="invite-color-grid"></div>
+      <div class="av-preview-wrap" style="margin-top:12px;" id="invite-av-preview"></div>
+      <button class="primary-btn" onclick="acceptInviteCreate()">Join trip 🚗</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ POST-CREATION INVITE MODAL ═══ -->
+<div class="modal-overlay" id="post-create-modal" onclick="if(event.target===this)skipPostCreateInvite()">
+  <div class="modal-sheet">
+    <div style="text-align:center;margin-bottom:4px;">
+      <div style="font-size:44px;margin-bottom:10px;">🎉</div>
+      <div style="font-size:18px;font-weight:700;color:#26215C;" id="post-create-trip-name"></div>
+      <div style="font-size:13px;color:#AFA9EC;margin-top:4px;margin-bottom:18px;">Trip created! Invite your friends now.</div>
+    </div>
+    <button onclick="copyPostCreateInvite()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy invite link
+    </button>
+    <button id="post-create-share-btn" onclick="sharePostCreateInvite()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#E8FAF2;color:#0F6E56;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share via…
+    </button>
+    <button onclick="skipPostCreateInvite()" style="width:100%;padding:12px;border-radius:14px;border:1.5px solid #EEEDFE;background:#fff;color:#AFA9EC;font-size:14px;font-weight:500;cursor:pointer;">Start trip without inviting →</button>
+  </div>
+</div>
+
+<!-- ═══ EDIT TRIP MODAL ═══ -->
+<div class="modal-overlay" id="edit-trip-modal" onclick="if(event.target===this)closeEditTrip()">
+  <div class="modal-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:700;color:#26215C;">Edit trip details</div>
+      <button onclick="closeEditTrip()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#AFA9EC;padding:0 4px;line-height:1;">×</button>
+    </div>
+    <label class="form-lbl" style="margin-top:0;">Trip name</label><input type="text" id="et-name"/>
+    <label class="form-lbl">From</label><input type="text" id="et-from"/>
+    <label class="form-lbl">To</label><input type="text" id="et-to"/>
+    <label class="form-lbl">Start date</label><input type="date" id="et-date-start" style="color:#3C3489;"/>
+    <label class="form-lbl">End date</label><input type="date" id="et-date-end" style="color:#3C3489;"/>
+    <label class="form-lbl">Trip emoji</label><input type="text" id="et-emoji" maxlength="4" style="font-size:22px;text-align:center;width:80px;"/>
+    <button class="primary-btn" style="margin-top:18px;" onclick="saveEditTrip()">Save changes</button>
+  </div>
+</div>
+
+<!-- ═══ DELETE CONFIRM MODAL ═══ -->
+<div class="modal-overlay" id="delete-trip-modal" onclick="if(event.target===this)closeDeleteTrip()">
+  <div class="modal-sheet">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:44px;margin-bottom:12px;">🗑️</div>
+      <div style="font-size:17px;font-weight:700;color:#26215C;margin-bottom:8px;">Delete this trip?</div>
+      <div style="font-size:14px;color:#AFA9EC;line-height:1.6;">This will permanently remove <strong id="delete-trip-name"></strong> and all its stops, songs, expenses and memories. <strong style="color:#993556;">This cannot be undone.</strong></div>
+    </div>
+    <button onclick="confirmDeleteTrip()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#993556;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">Yes, delete trip</button>
+    <button onclick="closeDeleteTrip()" style="width:100%;padding:14px;border-radius:14px;border:1.5px solid #EEEDFE;background:#fff;color:#534AB7;font-size:15px;font-weight:600;cursor:pointer;">Cancel, keep it</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CREATE TRIP — multi-step flow
+     ═══════════════════════════════════════════ -->
+<div class="screen" id="s-create-trip">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-app-home')" id="create-back-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="topbar-title" id="create-step-title">Trip details</span>
+    <div style="width:28px;"></div>
+  </div>
+  <div class="scroll" style="padding-top:14px;">
+    <!-- Step indicators -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="sd-1"></div>
+      <div class="step-dot" id="sd-2"></div>
+      <div class="step-dot" id="sd-3"></div>
+    </div>
+
+    <!-- Step 1: Trip details -->
+    <div id="create-step-1">
+      <label class="form-lbl" style="margin-top:0;">Trip name</label>
+      <input type="text" id="ct-name" placeholder="e.g. Bengaluru to Goa"/>
+      <label class="form-lbl">From</label>
+      <input type="text" id="ct-from" placeholder="e.g. Bengaluru"/>
+      <label class="form-lbl">To</label>
+      <input type="text" id="ct-to" placeholder="e.g. Goa"/>
+      <label class="form-lbl">Start date</label>
+      <input type="date" id="ct-date-start" style="color:#3C3489;"/>
+      <label class="form-lbl">End date</label>
+      <input type="date" id="ct-date-end" style="color:#3C3489;"/>
+      <label class="form-lbl">Trip emoji <span style="font-weight:400;color:#AFA9EC;">(optional)</span></label>
+      <input type="text" id="ct-emoji" placeholder="🚗" maxlength="4" style="font-size:24px;text-align:center;"/>
+      <button class="primary-btn" onclick="createTripStep(2)">Set up your avatar</button>
+    </div>
+
+    <!-- Step 2: Avatar customisation -->
+    <div id="create-step-2" style="display:none;">
+      <div style="font-size:14px;color:#AFA9EC;margin-bottom:14px;">This is how you'll appear to your crew on this trip.</div>
+      <div class="av-preview-wrap" id="create-av-preview"></div>
+      <label class="form-lbl" style="margin-top:0;">Your name on this trip</label>
+      <input type="text" id="ct-av-name" placeholder="e.g. Cheth" oninput="updateCreatePreview()"/>
+      <label class="form-lbl">Your prop</label>
+      <div class="prop-grid" id="create-prop-grid"></div>
+      <label class="form-lbl">Avatar colour</label>
+      <div class="color-grid" id="create-color-grid"></div>
+      <button class="primary-btn" onclick="createTripStep(3)" style="margin-top:16px;">Review &amp; create</button>
+      <button class="add-btn" style="background:#F7F5FF;color:#534AB7;margin-top:8px;" onclick="createTripStep(1)">← Back</button>
+    </div>
+
+    <!-- Step 3: Review & launch -->
+    <div id="create-step-3" style="display:none;">
+      <div id="create-review-card" class="card" style="margin-bottom:14px;"></div>
+      <div style="font-size:13px;color:#AFA9EC;margin-bottom:12px;line-height:1.6;">
+        Once you create the trip you can invite friends via a shareable link. They'll set up their own avatar when they join.
+      </div>
+      <button class="primary-btn" onclick="launchNewTrip()">🚗 Create trip!</button>
+      <button class="add-btn" style="background:#F7F5FF;color:#534AB7;margin-top:8px;" onclick="createTripStep(2)">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPLASH -->
+<div class="screen active" id="s-splash">
+  <div style="background:linear-gradient(160deg,#EEEDFE 0%,#E1F5EE 50%,#FAEEDA 100%);padding:36px 24px 24px;text-align:center;border-bottom:1.5px solid #CECBF6;">
+    <svg width="80" height="54" viewBox="0 0 80 54" style="display:block;margin:0 auto 12px;"><filter id="ss"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#26215C" flood-opacity=".18"/></filter><g filter="url(#ss)"><rect x="8" y="18" width="64" height="26" rx="8" fill="#fff" stroke="#534AB7" stroke-width="2"/><rect x="14" y="10" width="36" height="18" rx="5" fill="#fff" stroke="#534AB7" stroke-width="2"/></g><rect x="17" y="13" width="14" height="12" rx="3" fill="#B5D4F4"/><rect x="33" y="13" width="14" height="12" rx="3" fill="#FAC775"/><circle cx="22" cy="44" r="6" fill="#534AB7"/><circle cx="22" cy="44" r="3" fill="#EEEDFE"/><circle cx="58" cy="44" r="6" fill="#534AB7"/><circle cx="58" cy="44" r="3" fill="#EEEDFE"/></svg>
+    <div style="font-size:26px;font-weight:700;color:#26215C;letter-spacing:-.3px;">Window Seat</div>
+    <div style="font-size:22px;font-weight:700;color:#26215C;letter-spacing:-.2px;" id="splash-trip-name">Trip</div>
+    <div style="font-size:13px;color:#534AB7;margin-top:4px;" id="splash-trip-subtitle"></div>
+  </div>
+  <div class="scroll" style="padding-top:16px;">
+    <p class="sec-lbl">Pick your seat</p>
+    <div style="display:flex;gap:4px;justify-content:space-around;padding:6px 0 4px;" id="splash-avatars"></div>
+    <div id="splash-status-wrap" style="display:none;margin-top:12px;background:#F3F0FE;border-radius:12px;padding:14px;border:1px solid #CECBF6;">
+      <div style="font-size:12px;color:#534AB7;margin-bottom:6px;font-weight:600;" id="splash-status-lbl">Set your status</div>
+      <input type="text" id="splash-status-input" placeholder='e.g. "navigating chaos since 2003"'/>
+      <div style="font-size:11px;color:#AFA9EC;margin-top:5px;">You can update this anytime from the crew page</div>
+    </div>
+    <div id="splash-picked" style="text-align:center;font-size:13px;color:#534AB7;min-height:18px;margin:10px 0 4px;"></div>
+    <button class="primary-btn" onclick="enterTrip()">Let's go! 🚗</button>
+    <button class="add-btn" style="background:#F7F5FF;color:#534AB7;margin-top:8px;" onclick="goTo('s-app-home')">← All trips</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="s-home">
+  <div style="background:linear-gradient(160deg,#EEEDFE 0%,#E1F5EE 60%,#FAEEDA 100%);padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid #CECBF6;">
+    <div id="home-av" style="width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #AFA9EC;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+    <div style="flex:1;min-width:0;overflow:hidden;">
+      <div style="font-size:15px;font-weight:700;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
+      <div style="font-size:11px;color:#534AB7;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-sub"></div>
+    </div>
+    <button onclick="goTo('s-app-home')" style="background:rgba(83,74,183,.12);border:none;cursor:pointer;color:#534AB7;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">← All trips</button>
+  </div>
+  <div class="scroll">
+    <div id="notif-feed" style="margin-top:12px;"></div>
+    <p class="sec-lbl" style="margin-top:4px;" id="cd-section-lbl">Countdown to June 20</p>
+    <div id="cd-box" class="countdown-box">
+      <div class="countdown-unit"><div class="countdown-num" id="cd-days">--</div><div class="countdown-lbl">Days</div></div>
+      <div class="countdown-sep">:</div>
+      <div class="countdown-unit"><div class="countdown-num" id="cd-hours">--</div><div class="countdown-lbl">Hours</div></div>
+      <div class="countdown-sep" id="cd-min-sep" style="display:none;">:</div>
+      <div class="countdown-unit" id="cd-min-unit" style="display:none;"><div class="countdown-num" id="cd-mins">--</div><div class="countdown-lbl">Mins</div></div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#AFA9EC;margin-bottom:4px;" id="cd-msg"></div>
+    <div class="stat-grid" style="margin-top:14px;">
+      <div class="stat-c" style="background:#EEEDFE;"><div class="stat-lbl">Distance</div><div class="stat-val" id="home-dist">~145 <span class="stat-unit">km</span></div></div>
+      <div class="stat-c" style="background:#E1F5EE;"><div class="stat-lbl">Stops</div><div class="stat-val" id="stat-stops">6</div></div>
+      <div class="stat-c" style="background:#FAEEDA;"><div class="stat-lbl">Crew</div><div class="stat-val" id="home-crew-count">4</div></div>
+      <div class="stat-c" style="background:#FBEAF0;"><div class="stat-lbl">Days</div><div class="stat-val" id="home-days">2</div></div>
+    </div>
+    <p class="sec-lbl">The crew</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" id="home-crew-badges"></div>
+    <p class="sec-lbl">Quick links</p>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-route')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Route &amp; stops</div><div style="font-size:12px;color:#AFA9EC;" id="home-stops-sub">6 stops</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-memories')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Memories &amp; photos</div><div style="font-size:12px;color:#AFA9EC;">Photos &amp; highlights</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-sounds')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4537E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Trip soundtrack</div><div style="font-size:12px;color:#AFA9EC;">Songs &amp; Spotify links</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-games')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Road trip games</div><div style="font-size:12px;color:#AFA9EC;">Bingo, dares &amp; challenges</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-expenses')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16l4-2 4 2 4-2 4 2V8z"/><line x1="16" y1="2" x2="16" y2="8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Expenses</div><div style="font-size:12px;color:#AFA9EC;" id="home-exp-sub">Track who paid what</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-pack')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Packing checklist</div><div style="font-size:12px;color:#AFA9EC;">Track what you've packed</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="card" style="cursor:pointer;" onclick="goTo('s-crew')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#993556" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">The crew</div><div style="font-size:12px;color:#AFA9EC;">Avatars, names &amp; status</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn on" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- ROUTE -->
+<div class="screen" id="s-route">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Route &amp; stops</span><span class="pill p-purple" id="route-dist">~145 km</span></div>
+  <div class="scroll">
+    <p class="sec-lbl" style="margin-top:8px;">All stops · tap to expand, drag to reorder</p>
+    <div id="stops-list"></div>
+    <button class="add-btn" onclick="toggleForm('add-stop-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log a new stop</button>
+    <div id="add-stop-form" style="display:none;" class="form-box">
+      <label class="form-lbl" style="margin-top:0;">Place name</label><input type="text" id="new-stop-name" placeholder="e.g. Mysore Palace"/>
+      <label class="form-lbl">Note / description</label><input type="text" id="new-stop-sub" placeholder="e.g. Lunch break"/>
+      <label class="form-lbl">Category</label><select id="new-stop-cat"></select>
+      <button class="add-btn" style="padding:8px;font-size:12px;margin-top:6px;" onclick="toggleForm('custom-cat-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add custom category</button>
+      <div id="custom-cat-form" style="display:none;background:#EEEDFE;border-radius:8px;padding:12px;margin-top:6px;">
+        <label class="form-lbl" style="margin-top:0;">Category name</label><input type="text" id="new-cat-name" placeholder="e.g. Shopping"/>
+        <div style="display:flex;gap:8px;margin-top:8px;"><select id="new-cat-color"><option value="purple">Purple</option><option value="teal">Teal</option><option value="blue">Blue</option><option value="amber">Amber</option><option value="pink">Pink</option><option value="green">Green</option></select><button class="small-btn save-btn" onclick="saveCustomCat()">Add</button></div>
+      </div>
+      <label class="form-lbl">Google Maps link</label><input type="url" id="new-stop-url" placeholder="Paste maps link"/>
+      <button class="primary-btn" onclick="saveNewStop()">Save stop</button>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn on" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- MEMORIES -->
+<div class="screen" id="s-memories">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Memories</span></div>
+  <div class="scroll">
+    <p class="sec-lbl" style="margin-top:8px;">Photo dump</p>
+    <div id="album-section"></div>
+    <p class="sec-lbl" style="margin-top:16px;">Highlights</p>
+    <div id="mem-feed"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <input type="text" id="new-highlight" placeholder="What was the best moment?" style="flex:1;"/>
+      <button class="primary-btn" style="width:auto;padding:10px 16px;margin-top:0;" onclick="saveHighlight()">Add</button>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- GAMES -->
+<div class="screen" id="s-games">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Road trip games</span></div>
+  <div class="scroll">
+    <p class="sec-lbl" style="margin-top:8px;">Pick a game</p>
+    <div class="game-tile" onclick="goTo('s-game-bingo')"><div class="game-tile-icon" style="background:#EEEDFE;">🎯</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Trip bingo</div><div style="font-size:12px;color:#AFA9EC;">Spot things, tick them off</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="game-tile" onclick="goTo('s-game-dare');shuffleDare()"><div class="game-tile-icon" style="background:#FAEEDA;">🎲</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Dare spinner</div><div style="font-size:12px;color:#AFA9EC;" id="dares-count">8 dares in the pool</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="game-tile" onclick="goTo('s-game-photo')"><div class="game-tile-icon" style="background:#E1F5EE;">📸</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Photo challenge</div><div style="font-size:12px;color:#AFA9EC;" id="pc-prog">0 / 6 completed</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- BINGO -->
+<div class="screen" id="s-game-bingo">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🎯 Trip bingo</span></div>
+  <div class="scroll">
+    <div id="bingo-grid"></div>
+    <button class="add-btn" style="margin-top:8px;" onclick="toggleForm('bingo-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add a square</button>
+    <div id="bingo-form" style="display:none;" class="form-box">
+      <label class="form-lbl" style="margin-top:0;">New square</label>
+      <input type="text" id="new-bingo" placeholder="e.g. found a stray cat"/>
+      <button class="primary-btn" onclick="saveBingo()">Add</button>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- DARE -->
+<div class="screen" id="s-game-dare">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🎲 Dare spinner</span></div>
+  <div class="scroll">
+    <div style="background:#F7F5FF;border-radius:18px;padding:24px 20px;margin-top:14px;border:1px solid #EEEDFE;text-align:center;"><div style="font-size:40px;margin-bottom:14px;">🎲</div><div style="font-size:17px;color:#3C3489;line-height:1.6;font-weight:500;" id="dare-text">Tap below to spin!</div></div>
+    <button class="primary-btn" onclick="shuffleDare()">🔀 Spin a new dare</button>
+    <p class="sec-lbl" style="margin-top:18px;">All dares <span id="dare-pool-count"></span></p>
+    <div id="dare-list-all"></div>
+    <button class="add-btn" onclick="toggleForm('dare-add-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add a dare</button>
+    <div id="dare-add-form" style="display:none;" class="form-box"><label class="form-lbl" style="margin-top:0;">New dare</label><input type="text" id="new-dare" placeholder="e.g. speak only in rhymes for 5 mins"/><button class="primary-btn" onclick="saveNewDare()">Add dare</button></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- PHOTO CHALLENGE -->
+<div class="screen" id="s-game-photo">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">📸 Photo challenge</span></div>
+  <div class="scroll">
+    <div id="photo-challenges"></div>
+    <button class="add-btn" onclick="toggleForm('pc-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add a challenge</button>
+    <div id="pc-form" style="display:none;" class="form-box"><label class="form-lbl" style="margin-top:0;">New challenge</label><input type="text" id="new-pc" placeholder="e.g. best window view shot"/><button class="primary-btn" onclick="savePC()">Add</button></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- PACKING -->
+<div class="screen" id="s-pack">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Packing checklist</span><div id="pack-topbar-av" style="width:34px;height:34px;border-radius:50%;background:#EEEDFE;border:2px solid #AFA9EC;display:flex;align-items:center;justify-content:center;"></div></div>
+  <div class="scroll">
+    <div id="pack-banner" style="background:#F3F0FE;border-radius:10px;padding:11px 13px;margin-top:14px;margin-bottom:4px;font-size:12px;color:#534AB7;display:flex;align-items:center;gap:8px;border:1px solid #CECBF6;"></div>
+    <p class="sec-lbl">Items</p>
+    <div id="pack-list"></div>
+    <button class="add-btn" onclick="toggleForm('pack-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add an item</button>
+    <div id="pack-form" style="display:none;" class="form-box"><label class="form-lbl" style="margin-top:0;">Item name</label><input type="text" id="new-pack-item" placeholder="e.g. Sunscreen"/><button class="primary-btn" onclick="savePackItem()">Add item</button></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- SOUNDTRACK -->
+<div class="screen" id="s-sounds">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Trip soundtrack</span></div>
+  <div class="scroll">
+    <div id="spotify-playlist-btn-wrap" style="margin-top:10px;"></div>
+    <p class="sec-lbl" style="margin-top:8px;">Songs &amp; Spotify links</p>
+    <div id="songs-list"></div>
+    <button class="add-btn" onclick="openSongForm()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add a song</button>
+    <div id="song-form" style="display:none;" class="form-box">
+      <label class="form-lbl" style="margin-top:0;">Paste Spotify link</label>
+      <input type="url" id="new-song-url" placeholder="https://open.spotify.com/track/..." oninput="previewSongLink(this.value)"/>
+      <div class="link-preview" id="song-link-preview"><div class="link-preview-title" id="song-preview-title"></div><div class="link-preview-sub" id="song-preview-sub"></div></div>
+      <label class="form-lbl" style="margin-top:10px;">Override song name <span style="font-weight:400;color:#AFA9EC;">(optional)</span></label>
+      <input type="text" id="new-song-name-override" placeholder="Leave blank to use detected title"/>
+      <div id="song-adder-label" style="margin-top:10px;font-size:12px;color:#534AB7;font-weight:600;"></div>
+      <button class="primary-btn" onclick="saveSong()">Add to soundtrack</button>
+    </div>
+    <div id="song-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center;">
+      <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;">
+        <div style="font-size:15px;font-weight:600;color:#3C3489;margin-bottom:12px;">Edit song memory</div>
+        <label class="form-lbl" style="margin-top:0;">Memory / moment</label>
+        <input type="text" id="edit-song-memory" placeholder="e.g. As we crossed the ghats"/>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="small-btn save-btn" style="flex:1;justify-content:center;" onclick="saveSongMemory()">✓ Save</button>
+          <button class="del-btn" onclick="closeSongModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- EXPENSES -->
+<div class="screen" id="s-expenses">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Expenses</span></div>
+  <div class="scroll">
+    <div class="stat-grid" style="margin-top:12px;">
+      <div class="stat-c" style="background:#FAEEDA;"><div class="stat-lbl">Total spent</div><div class="stat-val" id="exp-total">₹0</div></div>
+      <div class="stat-c" style="background:#E1F5EE;"><div class="stat-lbl">Your share</div><div class="stat-val" id="exp-per">₹0</div></div>
+    </div>
+    <p class="sec-lbl">What you owe &amp; are owed</p>
+    <div id="exp-balances"></div>
+    <p class="sec-lbl">All expenses</p>
+    <div id="exp-list"></div>
+    <button class="add-btn" onclick="toggleForm('exp-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add an expense</button>
+    <div id="exp-form" style="display:none;" class="form-box">
+      <label class="form-lbl" style="margin-top:0;">What for?</label><input type="text" id="new-exp-desc" placeholder="e.g. Breakfast at Kadamba Veg"/>
+      <label class="form-lbl">Amount (₹)</label>
+      <input type="text" id="new-exp-amount" inputmode="decimal" placeholder="e.g. 150 or 80+70" onblur="evalAmount(this)" oninput="evalAmountLive(this)"/>
+      <div id="exp-amt-preview" style="font-size:11px;color:#0F6E56;margin-top:3px;min-height:14px;"></div>
+      <label class="form-lbl" style="margin-top:10px;">Who paid?</label><div style="display:flex;gap:4px;flex-wrap:wrap;" id="exp-payer-btns"></div>
+      <label class="form-lbl" style="margin-top:14px;">Split between</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;" id="exp-split-btns"></div>
+      <div style="font-size:11px;color:#AFA9EC;margin-bottom:6px;" id="exp-split-hint">All 4 will split this equally</div>
+      <button class="primary-btn" onclick="saveExp()">Add expense</button>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- CREW -->
+<div class="screen" id="s-crew">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">The crew</span></div>
+  <div class="scroll">
+    <div id="crew-invite-bar" style="margin-top:8px;"></div>
+    <p class="sec-lbl" style="margin-top:4px;">Names &amp; status</p>
+    <div id="crew-cards"></div>
+    <p class="sec-lbl">Trip vibe</p>
+    <div style="background:#F7F5FF;border-radius:12px;padding:14px;border:1px solid #EEEDFE;"><textarea id="vibe-text" style="background:transparent;border:none;font-size:14px;color:#3C3489;line-height:1.7;width:100%;resize:none;min-height:44px;padding:0;box-shadow:none;" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">The kind of trip you'll still talk about in 10 years.</textarea></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- WRAP -->
+<div class="screen" id="s-wrap">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">Trip wrap-up</span><span class="pill p-amber" id="wrap-pill">Unlocks June 21</span></div>
+  <div class="scroll" id="wrap-content"></div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+</div></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// WINDOW SEAT — COMPLETE ISOLATED TRIP ARCHITECTURE
+// Each trip is fully self-contained. Switching trips swaps all data.
+// ══════════════════════════════════════════════════════════════════
+
+// ── AVATAR PROPS & COLOURS ────────────────────────────────────────
+const PROPS=[
+  {key:'coffee',emoji:'☕',label:'Coffee'},{key:'chef',emoji:'👨‍🍳',label:'Chef hat'},
+  {key:'mic',emoji:'🎤',label:'Mic'},{key:'pencil',emoji:'✏️',label:'Pencil'},
+  {key:'camera',emoji:'📷',label:'Camera'},{key:'compass',emoji:'🧭',label:'Compass'},
+  {key:'guitar',emoji:'🎸',label:'Guitar'},{key:'book',emoji:'📖',label:'Book'},
+];
+const AV_COLORS=[
+  {bg:'#EEEDFE',text:'#534AB7'},{bg:'#E1F5EE',text:'#0F6E56'},
+  {bg:'#E6F1FB',text:'#185FA5'},{bg:'#FAEEDA',text:'#854F0B'},
+  {bg:'#FBEAF0',text:'#993556'},{bg:'#EAF3DE',text:'#3B6D11'},
+  {bg:'#FFF0E0',text:'#9B4A00'},{bg:'#F0F0F0',text:'#444444'},
+];
+
+// ── SVG AVATAR ─────────────────────────────────────────────────────
+function svgAv(m,s){
+  // Per-character appearance for the four named crew members.
+  // Custom crew members (created via invite/new trip) get a generic face
+  // with their chosen avatar colour as the circle, and a neutral skin tone.
+  const CHAR={
+    cheth:{sk:'#F5CBA7',hr:'#3C2415',ot:'#7F77DD'},
+    saxi: {sk:'#C68642',hr:'#1a0a00',ot:'#1D9E75'},
+    neens:{sk:'#FDDBB4',hr:'#2d1b00',ot:'#378ADD'},
+    sherbet:{sk:'#FFE4C4',hr:'#8B4513',ot:'#EF9F27'},
+  };
+  const ch=CHAR[m.key];
+  const ot=ch?ch.ot:(m.color||'#7F77DD');
+  const sk=ch?ch.sk:'#F5CBA7';
+  const hr=ch?ch.hr:'#3C2415';
+  const cx=s/2,pr=m.prop||'coffee';
+  let p='';
+  if(pr==='coffee')p=`<rect x="${s*.62}" y="${s*.52}" width="${s*.18}" height="${s*.14}" rx="2" fill="#fff" stroke="#c9a96e" stroke-width="1"/><path d="M${s*.8} ${s*.55} q${s*.06} 0 ${s*.06} ${s*.05} t-${s*.06} ${s*.05}" fill="none" stroke="#c9a96e" stroke-width="1"/>`;
+  else if(pr==='chef')p=`<ellipse cx="${cx}" cy="${s*.12}" rx="${s*.14}" ry="${s*.09}" fill="#fff" stroke="#ddd" stroke-width=".8"/><rect x="${cx-s*.09}" y="${s*.14}" width="${s*.18}" height="${s*.06}" rx="1" fill="#eee"/>`;
+  else if(pr==='mic')p=`<ellipse cx="${s*.76}" cy="${s*.52}" rx="${s*.05}" ry="${s*.07}" fill="#888"/><rect x="${s*.745}" y="${s*.58}" width="${s*.03}" height="${s*.14}" fill="#888"/><line x1="${s*.73}" y1="${s*.72}" x2="${s*.79}" y2="${s*.72}" stroke="#888" stroke-width="1.2"/>`;
+  else if(pr==='pencil')p=`<rect x="${s*.65}" y="${s*.48}" width="${s*.06}" height="${s*.22}" rx="1" fill="#EF9F27" transform="rotate(-20,${s*.68},${s*.59})"/><polygon points="${s*.64},${s*.68} ${s*.72},${s*.68} ${s*.68},${s*.75}" fill="#FDDBB4" transform="rotate(-20,${s*.68},${s*.59})"/>`;
+  else if(pr==='camera')p=`<rect x="${s*.58}" y="${s*.5}" width="${s*.22}" height="${s*.17}" rx="2" fill="#555"/><circle cx="${s*.69}" cy="${s*.585}" r="${s*.04}" fill="#9DD"/><rect x="${s*.58}" y="${s*.5}" width="${s*.07}" height="${s*.05}" rx="1" fill="#777"/>`;
+  else if(pr==='compass')p=`<circle cx="${s*.76}" cy="${s*.54}" r="${s*.1}" fill="none" stroke="#E55" stroke-width="1.2"/><line x1="${s*.76}" y1="${s*.44}" x2="${s*.76}" y2="${s*.48}" stroke="#E55" stroke-width="1.5"/><line x1="${s*.76}" y1="${s*.6}" x2="${s*.76}" y2="${s*.64}" stroke="#555" stroke-width="1.5"/>`;
+  else if(pr==='guitar')p=`<ellipse cx="${s*.75}" cy="${s*.62}" rx="${s*.07}" ry="${s*.09}" fill="#C8860A" stroke="#8B5E0A" stroke-width=".8"/><rect x="${s*.735}" y="${s*.48}" width="${s*.03}" height="${s*.15}" fill="#A0700A"/>`;
+  else if(pr==='book')p=`<rect x="${s*.6}" y="${s*.48}" width="${s*.2}" height="${s*.18}" rx="1.5" fill="#E06"/><rect x="${s*.6}" y="${s*.48}" width="${s*.03}" height="${s*.18}" fill="#C05"/><line x1="${s*.66}" y1="${s*.54}" x2="${s*.76}" y2="${s*.54}" stroke="#fff" stroke-width=".8" opacity=".5"/>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><circle cx="${cx}" cy="${cx}" r="${s*.46}" fill="${ot}"/><circle cx="${cx}" cy="${s*.38}" r="${s*.2}" fill="${sk}"/><ellipse cx="${cx}" cy="${s*.7}" rx="${s*.22}" ry="${s*.18}" fill="${sk}"/><ellipse cx="${cx}" cy="${s*.28}" rx="${s*.22}" ry="${s*.14}" fill="${hr}"/><ellipse cx="${cx-s*.07}" cy="${s*.37}" rx="${s*.025}" ry="${s*.03}" fill="#3a2000"/><ellipse cx="${cx+s*.07}" cy="${s*.37}" rx="${s*.025}" ry="${s*.03}" fill="#3a2000"/><path d="M${cx-s*.05} ${s*.43} q${s*.05} ${s*.04} ${s*.1} 0" fill="none" stroke="#a0522d" stroke-width="1.2" stroke-linecap="round"/>${p}</svg>`;
+}
+
+// ── AVATAR UNIQUENESS ──────────────────────────────────────────────
+// Returns true if the prop+colorIdx combo is already taken by another crew member
+function isComboTaken(tripCrewOrNull,prop,colorIdx,excludeKey){
+  const crew=tripCrewOrNull||[];
+  const c=AV_COLORS[colorIdx];if(!c)return false;
+  return crew.some(m=>{
+    if(m.key===excludeKey)return false;
+    return m.prop===prop&&m.bg===c.bg;
+  });
+}
+// Returns a set of {prop_colorIdx} strings that are already taken
+function takenCombos(crew,excludeKey){
+  const s=new Set();
+  (crew||[]).forEach(m=>{
+    if(m.key===excludeKey)return;
+    const ci=AV_COLORS.findIndex(c=>c.bg===m.bg);
+    if(ci>=0)s.add(m.prop+'_'+ci);
+  });
+  return s;
+}
+// Every field a trip needs, all isolated inside the trip object.
+function makeTripData(o){
+  return Object.assign({
+    id:'',name:'',emoji:'🚗',from:'',to:'',dateStart:'',dateEnd:'',
+    dist:'',inviteToken:'',
+    crew:[],          // [{key,name,color,bg,prop,status,_editing}]
+    stops:[],
+    highlights:[],
+    songs:[],
+    pack:[{text:'ID / Aadhaar',ticked:{}},{text:'Phone charger',ticked:{}},{text:'Sunscreen',ticked:{}},{text:'Snacks',ticked:{}},{text:'Medicines',ticked:{}}],
+    expenses:[],
+    settledPairs:[],  // array of 'keyA_keyB' strings
+    notifications:[],
+    bingo:[],
+    dares:[],
+    photoChallenge:[],
+    catMeta:{
+      pickup:{label:'Pickup',color:'#EEEDFE',text:'#534AB7',dot:'#7F77DD'},
+      breakfast:{label:'Breakfast',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
+      nature:{label:'Nature',color:'#EAF3DE',text:'#3B6D11',dot:'#5BA32B'},
+      stay:{label:'Stay',color:'#FAEEDA',text:'#854F0B',dot:'#EF9F27'},
+      food:{label:'Food',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
+      other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
+    },
+    spotifyCreated:false,spotifyTrackIds:[],albumPhotoSrcs:[],
+    albumUrl:'',albumSetupDone:false,
+  },o);
+}
+
+// ── SEED TRIP: BENGALURU → MYSORE ─────────────────────────────────
+const SEED_ID='bng-mys-2026';
+let TRIPS=[makeTripData({
+  id:SEED_ID,name:'Bengaluru to Mysore',emoji:'🚗',
+  from:'Bengaluru',to:'Mysore',dateStart:'June 20, 2026',dateEnd:'June 21, 2026',
+  dist:'~145 km',inviteToken:'wsBMJ2026',preConfigured:true,
+  albumUrl:'https://photos.app.goo.gl/nSjzTZj5JuNMxXWM9',albumSetupDone:true,
+  crew:[
+    {key:'cheth',name:'Cheth',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:'',_editing:false},
+    {key:'saxi',name:'Saxi',color:'#0F6E56',bg:'#E1F5EE',prop:'chef',status:'',_editing:false},
+    {key:'neens',name:'Neens',color:'#185FA5',bg:'#E6F1FB',prop:'mic',status:'',_editing:false},
+    {key:'sherbet',name:'Sherbet',color:'#854F0B',bg:'#FAEEDA',prop:'pencil',status:'',_editing:false},
+  ],
+  highlights:[
+    'Spotted colourful birds at Ranganathittu!',
+    'Cheth\'s coffee order — most complicated ever',
+    '90s playlist at full volume on the highway',
+  ],
+  songs:[
+    {name:'Dil Se Re — A.R. Rahman',url:'https://open.spotify.com/track/example1',platform:'spotify',who:'cheth',memory:'Played as we left Bengaluru'},
+    {name:'Kabhi Kabhi Aditi — Jaane Tu',url:'https://open.spotify.com/track/example2',platform:'spotify',who:'sherbet',memory:'Sunrise on the highway'},
+  ],
+  stops:[
+    {name:'Sri Guru Residency, Sanjayanagara',sub:'Sherbet sets off',url:'https://maps.app.goo.gl/Ra7mRZNEV1Lkz1Gg7',status:'done',cat:'pickup',open:false},
+    {name:'Malleshwaram (Maruti Arena)',sub:'Sherbet picks up Neens',url:'https://maps.app.goo.gl/Z7bC4QwfeqEM1bNLA',status:'done',cat:'pickup',open:false},
+    {name:'Basaveshwar Nagar',sub:"Partial crew assembles at Cheth's",url:'https://maps.app.goo.gl/dhdKQFSSQ4U23FmR7',status:'here',cat:'pickup',open:false},
+    {name:'Kadamba Veg, Bidadi',sub:'Breakfast — Saxi joins here!',url:'https://maps.app.goo.gl/puHAfZGURxputSKQ9',status:'upcoming',cat:'breakfast',open:false},
+    {name:'Ranganathittu Bird Sanctuary',sub:'Scenic pitstop',url:'https://maps.app.goo.gl/8zCEP1sWFiqAvvpz6',status:'upcoming',cat:'nature',open:false},
+    {name:'The Windflower Resorts, Mysuru',sub:'Home for the night',url:'https://maps.app.goo.gl/jN7yWXDjuyKo4LCt9',status:'upcoming',cat:'stay',open:false},
+  ],
+  pack:[
+    {text:'ID / Aadhaar',ticked:{}},{text:'Phone charger',ticked:{}},
+    {text:'Sunscreen',ticked:{}},{text:'Snacks',ticked:{}},
+    {text:'Aux / Bluetooth cable',ticked:{}},{text:'Extra cash',ticked:{}},
+    {text:'Medicines',ticked:{}},{text:'Camera',ticked:{}},
+  ],
+  catMeta:{
+    pickup:{label:'Pickup',color:'#EEEDFE',text:'#534AB7',dot:'#7F77DD'},
+    breakfast:{label:'Breakfast',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
+    nature:{label:'Nature',color:'#EAF3DE',text:'#3B6D11',dot:'#5BA32B'},
+    stay:{label:'Stay',color:'#FAEEDA',text:'#854F0B',dot:'#EF9F27'},
+    sightseeing:{label:'Sightseeing',color:'#E6F1FB',text:'#185FA5',dot:'#378ADD'},
+    food:{label:'Food',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
+    other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
+  },
+  bingo:[
+    {t:'Spotted a cow',d:false,by:null},{t:'Highway selfie',d:false,by:null},
+    {t:'Debated playlist',d:false,by:null},{t:'Someone slept',d:false,by:null},
+    {t:'First chai stop',d:false,by:null},{t:'Sang together',d:false,by:null},
+    {t:'Got briefly lost',d:false,by:null},{t:'Bird spotted',d:false,by:null},
+    {t:'Speed bump!',d:false,by:null},{t:'Petrol stop',d:false,by:null},
+    {t:'90s song moment',d:false,by:null},{t:'Window photo',d:false,by:null},
+    {t:'Saxi cooked',d:false,by:null},{t:'Sherbet sketched',d:false,by:null},
+    {t:'Neens hummed',d:false,by:null},{t:'Cheth drove fast',d:false,by:null},
+  ],
+  dares:[
+    'Sing the next 90s song at full volume',
+    'Call someone — "on a road trip, can\'t talk" — hang up',
+    'Best weather reporter impression out the window',
+    'Text your mum a dramatic trip update',
+    'Make up a song about the last stop',
+    'Narrate 5 mins like a BBC documentary',
+    'Dramatic slow-mo walk at the next petrol stop',
+    'Rate the last meal out of 10 — full monologue',
+  ],
+  photoChallenge:[
+    {text:'All four in the rear view mirror',done:false,by:null},
+    {text:'First petrol station stop selfie',done:false,by:null},
+    {text:'Someone asleep in the back seat',done:true,by:'cheth'},
+    {text:'The highway stretching ahead',done:false,by:null},
+    {text:'Your order at the breakfast stop',done:true,by:'saxi'},
+    {text:'A bird at Ranganathittu',done:false,by:null},
+  ],
+})];
+
+// ── ACTIVE TRIP WORKING VARIABLES ─────────────────────────────────
+// T = the active trip object. CREW = T.crew (convenience alias).
+// Everything reads/writes from T — no other global data arrays.
+let T=TRIPS[0];
+let CREW=T.crew;
+let selCrew=CREW[0];  // which crew member this session belongs to
+let selPayer=CREW[0]; // default payer in expense form
+let splitKeys=CREW.map(c=>c.key);
+let editSongIdx=-1;
+
+const STATUS_META={
+  upcoming:{cls:'p-blue',lbl:'Upcoming'},
+  'en-route':{cls:'p-orange',lbl:'En route'},
+  here:{cls:'p-amber',lbl:'Here now'},
+  done:{cls:'p-green',lbl:'Done'},
+};
+
+// Switch which trip is active — load its data into working variables
+function activateTrip(trip){
+  T=trip;CREW=T.crew;
+  selCrew=CREW[0]||{key:'',name:'',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
+  selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+}
+
+function cName(key){return(CREW.find(c=>c.key===key)||{name:key}).name;}
+
+// ── NOTIFICATIONS ──────────────────────────────────────────────────
+function requestNotifPermission(){if(typeof Notification!=='undefined'&&Notification.permission==='default')Notification.requestPermission();}
+function pushNotif(text){T.notifications.unshift({text,time:new Date(),id:Date.now()});renderNotifFeed();if(typeof Notification!=='undefined'&&Notification.permission==='granted')new Notification('Window Seat 🚗',{body:text});}
+function dismissNotif(id){T.notifications=T.notifications.filter(n=>n.id!==id);renderNotifFeed();}
+function fmtT(d){const m=Math.round((Date.now()-d)/60000);return m<1?'just now':m===1?'1 min ago':m+' mins ago';}
+function renderNotifFeed(){
+  const el=document.getElementById('notif-feed');if(!el)return;
+  el.innerHTML=T.notifications.slice(0,3).map(n=>`<div class="notif-banner"><div class="notif-dot"></div><div style="flex:1;"><div class="notif-text">${n.text}</div><div class="notif-time">${fmtT(n.time)}</div></div><button class="notif-close" onclick="dismissNotif(${n.id})">✕</button></div>`).join('');
+}
+
+// ── APP HOME ───────────────────────────────────────────────────────
+function renderAppHome(){
+  const el=document.getElementById('trips-list');if(!el)return;el.innerHTML='';
+
+  // Show pending invite banner at top if one is waiting
+  if(pendingInvite&&pendingInvite.trip){
+    const inv=pendingInvite.trip;
+    const banner=document.createElement('div');
+    banner.style.cssText='background:linear-gradient(135deg,#26215C,#534AB7);border-radius:18px;padding:18px;margin-bottom:16px;';
+    banner.innerHTML=`
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">You're invited!</div>
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+        <div style="font-size:32px;flex-shrink:0;line-height:1;">${inv.emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:2px;">${inv.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.65);">${inv.from} → ${inv.to}${inv.dateStart?' · '+inv.dateStart:''}</div>
+        </div>
+      </div>
+      ${inv.crew.length?`
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Who's coming</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">${inv.crew.map(c=>`
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:${c.bg};border:3px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;">${svgAv(c,36)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:600;">${c.name}</div>
+        ${c.status?`<div style="font-size:9px;color:rgba(255,255,255,.5);font-style:italic;max-width:54px;text-align:center;line-height:1.2;">${c.status}</div>`:''}
+      </div>`).join('')}</div>
+      </div>`:''}
+      <div style="display:flex;gap:8px;">
+        <button onclick="acceptPendingInvite()" style="flex:1;padding:12px;border-radius:12px;border:none;background:#fff;color:#534AB7;font-size:14px;font-weight:700;cursor:pointer;">Accept →</button>
+        <button onclick="declinePendingInvite()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.8);font-size:14px;font-weight:500;cursor:pointer;">Decline</button>
+      </div>`;
+    el.appendChild(banner);
+  }
+
+  TRIPS.forEach(trip=>{
+    const card=document.createElement('div');card.className='trip-card';
+    const crewPills=trip.crew.slice(0,4).map(c=>`<div style="width:28px;height:28px;border-radius:50%;background:${c.bg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;margin-left:-6px;" title="${c.name}">${svgAv(c,20)}</div>`).join('');
+    card.innerHTML=`
+      <div class="trip-card-header">
+        <div class="trip-card-icon" style="background:linear-gradient(135deg,#EEEDFE,#E1F5EE);">${trip.emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:16px;font-weight:600;color:#26215C;margin-bottom:3px;">${trip.name}</div>
+          <div style="font-size:12px;color:#AFA9EC;">${trip.from} → ${trip.to}</div>
+          <div style="font-size:12px;color:#AFA9EC;">${trip.dateStart}${trip.dateEnd&&trip.dateEnd!==trip.dateStart?' – '+trip.dateEnd:''}</div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;margin-left:6px;">${crewPills}</div>
+            <span style="font-size:12px;color:#534AB7;font-weight:500;">${trip.crew.length} crew</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 14px 14px;display:flex;gap:8px;">
+        <button class="primary-btn" style="margin-top:0;flex:1;" onclick="openTrip('${trip.id}')">Open trip →</button>
+        <button onclick="openInviteSheet('${trip.id}')" style="margin-top:0;flex-shrink:0;background:#F3F0FE;border:none;cursor:pointer;border-radius:12px;padding:0 14px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:#534AB7;" title="Invite friends">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Invite
+        </button>
+        <button onclick="openEditTrip('${trip.id}')" style="margin-top:0;flex-shrink:0;background:#F3F0FE;border:none;cursor:pointer;border-radius:12px;padding:0 12px;display:flex;align-items:center;" title="Edit trip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button onclick="openDeleteTrip('${trip.id}')" style="margin-top:0;flex-shrink:0;background:#FBEAF0;border:none;cursor:pointer;border-radius:12px;padding:0 12px;display:flex;align-items:center;" title="Delete trip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#993556" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+function genInviteUrl(trip){
+  const base=window.location.href.split('?')[0];
+  return base+'?join='+btoa(JSON.stringify({tid:trip.id,token:trip.inviteToken,name:trip.name,from:trip.from,to:trip.to}));
+}
+let _inviteSheetTripId=null;
+function openInviteSheet(tid){
+  const trip=TRIPS.find(t=>t.id===tid);if(!trip)return;
+  _inviteSheetTripId=tid;
+  const title=document.getElementById('invite-sheet-title');
+  const sub=document.getElementById('invite-sheet-sub');
+  if(title)title.textContent='Invite friends to '+trip.name;
+  if(sub)sub.textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
+  // Show/hide native share button depending on browser support
+  const shareBtn=document.getElementById('invite-sheet-share-btn');
+  if(shareBtn)shareBtn.style.display=navigator.share?'flex':'none';
+  document.getElementById('invite-sheet').classList.add('open');
+}
+function closeInviteSheet(){
+  document.getElementById('invite-sheet').classList.remove('open');
+  _inviteSheetTripId=null;
+}
+function copyInviteSheet(){
+  const trip=TRIPS.find(t=>t.id===_inviteSheetTripId);if(!trip)return;
+  const url=genInviteUrl(trip);
+  navigator.clipboard.writeText(url)
+    .then(()=>{toast('Link copied! Send it to your friends 🔗');closeInviteSheet();})
+    .catch(()=>{
+      // Fallback: select from a temp textarea
+      const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;opacity:0;';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+      toast('Link copied! 🔗');closeInviteSheet();
+    });
+}
+function shareInviteSheet(){
+  const trip=TRIPS.find(t=>t.id===_inviteSheetTripId);if(!trip)return;
+  const url=genInviteUrl(trip);
+  navigator.share({
+    title:'Join me on Window Seat! 🚗',
+    text:`You're invited to join my road trip: ${trip.name} (${trip.from} → ${trip.to})`,
+    url,
+  }).then(()=>closeInviteSheet()).catch(()=>{});
+}
+
+// Open a trip directly — no splash. Uses the stored crew key for this session.
+// Call this from the trip card "Open trip" button.
+function openTrip(tid){
+  const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+  activateTrip(trip);
+  // Restore selCrew from stored key, or default to first crew member
+  const storedKey=trip._myCrewKey;
+  selCrew=(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+  selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+  enterTrip();
+}
+
+// Show splash to pick/create avatar — only called during invite acceptance
+function _showSplashForTrip(trip){
+  activateTrip(trip);
+  renderSplash();
+  goTo('s-splash');
+}
+// Keep openTripSplash as alias (used internally)
+function openTripSplash(tid){
+  const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+  _showSplashForTrip(trip);
+}
+
+// ── INVITE FLOW ────────────────────────────────────────────────────
+// Two modes:
+//   "pick"   — trip has pre-configured crew (like Bengaluru→Mysore).
+//              Invitee picks which existing avatar they are.
+//   "create" — open trip, invitee creates their own avatar from scratch.
+// A trip is "pre-configured" when crew.length > 0 AND the trip is the seed
+// trip OR was explicitly marked as pre-configured (preConfigured:true).
+
+let pendingInvite=null,invProp='coffee',invColorIdx=0,invPickedKey=null;
+
+function checkInviteParam(){
+  const p=new URLSearchParams(window.location.search);
+  const raw=p.get('join');if(!raw)return;
+  try{
+    const d=JSON.parse(atob(raw));
+    const trip=TRIPS.find(t=>t.id===d.tid&&t.inviteToken===d.token);
+    if(!trip){
+      // Trip not found locally — create a lightweight placeholder so user sees the invite
+      // In a real app the server would return trip details; here we show what's in the token
+      pendingInvite={trip:null,data:d};
+      // Show a simple toast since we can't render a card without the trip object
+      toast('Invite link received — trip not found on this device');
+      window.history.replaceState({},'',window.location.pathname);
+      return;
+    }
+    // Store as pending — app home will render the invite banner
+    pendingInvite={trip};
+    window.history.replaceState({},'',window.location.pathname);
+    // renderAppHome is called in init after this, so the banner will appear
+  }catch(e){console.warn('bad invite',e);}
+}
+
+function acceptPendingInvite(){
+  if(!pendingInvite||!pendingInvite.trip)return;
+  const trip=pendingInvite.trip;
+  const isPreConfigured=trip.preConfigured||trip.id===SEED_ID;
+  if(isPreConfigured){
+    // Show avatar picker in the invite modal
+    document.getElementById('invite-trip-name').textContent=trip.name;
+    document.getElementById('invite-sub').textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
+    document.getElementById('invite-mode-pick').style.display='block';
+    document.getElementById('invite-mode-create').style.display='none';
+    invPickedKey=null;
+    renderInviteCrewPick(trip);
+    document.getElementById('invite-modal').classList.add('open');
+  } else {
+    // Open trip, create avatar
+    document.getElementById('invite-trip-name').textContent=trip.name;
+    document.getElementById('invite-sub').textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
+    document.getElementById('invite-mode-pick').style.display='none';
+    document.getElementById('invite-mode-create').style.display='block';
+    invProp='coffee';invColorIdx=0;
+    renderInvitePropGrid();renderInviteColorGrid();updateInvitePreview();
+    document.getElementById('invite-modal').classList.add('open');
+  }
+}
+
+function declinePendingInvite(){
+  pendingInvite=null;
+  renderAppHome();
+  toast('Invite declined');
+}
+
+// Mode A: pick existing avatar
+function renderInviteCrewPick(trip){
+  const el=document.getElementById('invite-crew-pick');if(!el)return;
+  // Use a 2×2 grid layout matching the preview
+  el.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;';
+  el.innerHTML='';
+  trip.crew.forEach(c=>{
+    const tile=document.createElement('div');
+    tile.style.cssText=`border-radius:14px;border:2px solid #EEEDFE;background:#fff;padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:all .15s;`;
+    const av=document.createElement('div');
+    av.id='ipick-circ-'+c.key;
+    av.style.cssText=`width:60px;height:60px;border-radius:50%;background:${c.bg};border:3px solid transparent;display:flex;align-items:center;justify-content:center;transition:border-color .15s;`;
+    av.innerHTML=svgAv(c,46);
+    const nm=document.createElement('div');
+    nm.style.cssText=`font-size:13px;font-weight:700;color:${c.color};`;
+    nm.textContent=c.name;
+    tile.appendChild(av);tile.appendChild(nm);
+    // Show status only if set
+    if(c.status){
+      const st=document.createElement('div');
+      st.style.cssText='font-size:10px;color:#AFA9EC;font-style:italic;text-align:center;line-height:1.3;';
+      st.textContent=c.status;
+      tile.appendChild(st);
+    }
+    tile.onclick=()=>{
+      const joinBtn=document.getElementById('invite-join-btn');
+      // Toggle deselect if already picked
+      if(invPickedKey===c.key){
+        invPickedKey=null;
+        tile.style.borderColor='#EEEDFE';tile.style.background='#fff';
+        av.style.borderColor='transparent';
+        const conf=document.getElementById('invite-pick-confirm');if(conf)conf.style.display='none';
+        if(joinBtn){joinBtn.style.background='#CECBF6';joinBtn.style.cursor='default';}
+        return;
+      }
+      // Deselect previous
+      document.querySelectorAll('[id^="ipick-circ-"]').forEach(a=>a.style.borderColor='transparent');
+      el.querySelectorAll('div[style*="border-radius:14px"]').forEach(t=>{t.style.borderColor='#EEEDFE';t.style.background='#fff';});
+      // Select this one
+      invPickedKey=c.key;
+      tile.style.borderColor=c.color;tile.style.background=c.bg+'66';
+      av.style.borderColor=c.color;
+      const conf=document.getElementById('invite-pick-confirm');
+      const pickNm=document.getElementById('invite-pick-name');
+      if(conf)conf.style.display='block';
+      if(pickNm)pickNm.textContent="You're joining as "+c.name;
+      if(joinBtn){joinBtn.style.background='#534AB7';joinBtn.style.cursor='pointer';}
+    };
+    el.appendChild(tile);
+  });
+  document.getElementById('invite-pick-confirm').style.display='none';
+}
+function acceptInvitePick(){
+  if(!pendingInvite||!invPickedKey){toast('Pick your avatar first');return;}
+  document.getElementById('invite-modal').classList.remove('open');
+  const jb=document.getElementById('invite-join-btn');
+  if(jb){jb.style.background='#CECBF6';jb.style.cursor='default';}
+  const trip=pendingInvite.trip;
+  trip._myCrewKey=invPickedKey;
+  activateTrip(trip);
+  selCrew=CREW.find(c=>c.key===invPickedKey)||CREW[0];
+  selPayer=selCrew;
+  pendingInvite=null;invPickedKey=null;
+  renderAppHome();
+  toast('Welcome aboard! 🎉');
+  enterTrip();
+}
+
+// Mode B: create new avatar
+function renderInvitePropGrid(){
+  const el=document.getElementById('invite-prop-grid');if(!el)return;el.innerHTML='';
+  const crew=pendingInvite?pendingInvite.trip.crew:[];
+  PROPS.forEach(p=>{
+    const taken=isComboTaken(crew,p.key,invColorIdx,'');
+    const t=document.createElement('div');
+    t.className='prop-tile'+(p.key===invProp?' sel':'');
+    if(taken)t.style.cssText='opacity:0.3;cursor:not-allowed;';
+    t.innerHTML=`<span style="font-size:22px;">${p.emoji}</span><span class="lbl">${p.label}</span>${taken?'<span style="font-size:9px;color:#993556;">taken</span>':''}`;
+    t.onclick=()=>{if(taken)return;invProp=p.key;renderInvitePropGrid();renderInviteColorGrid();updateInvitePreview();};
+    el.appendChild(t);
+  });
+}
+function renderInviteColorGrid(){
+  const el=document.getElementById('invite-color-grid');if(!el)return;el.innerHTML='';
+  const crew=pendingInvite?pendingInvite.trip.crew:[];
+  AV_COLORS.forEach((c,i)=>{
+    const taken=isComboTaken(crew,invProp,i,'');
+    const s=document.createElement('div');
+    s.className='color-swatch'+(i===invColorIdx?' sel':'');
+    s.style.cssText=`background:${c.bg};border-color:${i===invColorIdx?'#26215C':c.bg};${taken?'opacity:0.3;cursor:not-allowed;position:relative;':''}`;
+    if(taken){
+      s.title='This colour is taken with this prop';
+      s.innerHTML='<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#993556;font-weight:700;">✕</span>';
+    }
+    s.onclick=()=>{if(taken)return;invColorIdx=i;renderInviteColorGrid();renderInvitePropGrid();updateInvitePreview();};
+    el.appendChild(s);
+  });
+}
+function updateInvitePreview(){
+  const el=document.getElementById('invite-av-preview');if(!el)return;
+  const name=(document.getElementById('invite-name')||{value:'You'}).value.trim()||'You';
+  const c=AV_COLORS[invColorIdx];
+  el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">${svgAv({key:'_inv',name,bg:c.bg,color:c.text,prop:invProp},64)}<div style="font-size:15px;font-weight:600;color:#3C3489;">${name}</div></div>`;
+}
+function acceptInviteCreate(){
+  if(!pendingInvite)return;
+  const name=(document.getElementById('invite-name')||{value:''}).value.trim();
+  if(!name){toast('Enter your name to join');return;}
+  if(isComboTaken(pendingInvite.trip.crew,invProp,invColorIdx,'')){
+    toast('That prop + colour combo is taken — pick a different one');return;
+  }
+  const c=AV_COLORS[invColorIdx];
+  const newMember={key:'u'+Date.now(),name,color:c.text,bg:c.bg,prop:invProp,status:'',_editing:false};
+  pendingInvite.trip.crew.push(newMember);
+  // Store which crew member this user is
+  pendingInvite.trip._myCrewKey=newMember.key;
+  document.getElementById('invite-modal').classList.remove('open');
+  const trip=pendingInvite.trip;
+  activateTrip(trip);
+  selCrew=newMember;selPayer=newMember;
+  pendingInvite=null;
+  renderAppHome();
+  toast('Welcome to '+trip.name+'! 🎉');
+  enterTrip();
+}
+// Keep old acceptInvite as alias for safety
+function acceptInvite(){acceptInviteCreate();}
+
+// ── POST-CREATION INVITE ───────────────────────────────────────────
+let _postCreateTrip=null;
+function openPostCreateInvite(trip){
+  _postCreateTrip=trip;
+  const nm=document.getElementById('post-create-trip-name');
+  if(nm)nm.textContent=trip.emoji+' '+trip.name+' is ready!';
+  const sb=document.getElementById('post-create-share-btn');
+  if(sb)sb.style.display=navigator.share?'flex':'none';
+  document.getElementById('post-create-modal').classList.add('open');
+}
+function copyPostCreateInvite(){
+  if(!_postCreateTrip)return;
+  const url=genInviteUrl(_postCreateTrip);
+  const doClose=()=>{
+    document.getElementById('post-create-modal').classList.remove('open');
+    const t=_postCreateTrip;_postCreateTrip=null;
+    toast('Link copied! Share it with your crew 🔗');
+    setTimeout(()=>enterTrip(),400);
+  };
+  navigator.clipboard.writeText(url).then(doClose).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    doClose();
+  });
+}
+function sharePostCreateInvite(){
+  if(!_postCreateTrip)return;
+  navigator.share({
+    title:'Join me on Window Seat! 🚗',
+    text:`You're invited to join: ${_postCreateTrip.name} (${_postCreateTrip.from} → ${_postCreateTrip.to})`,
+    url:genInviteUrl(_postCreateTrip),
+  }).catch(()=>{});
+}
+function skipPostCreateInvite(){
+  document.getElementById('post-create-modal').classList.remove('open');
+  _postCreateTrip=null;
+  enterTrip();
+}
+let _editTripId=null;
+function openEditTrip(tid){
+  const trip=TRIPS.find(t=>t.id===tid);if(!trip)return;
+  _editTripId=tid;
+  document.getElementById('et-name').value=trip.name||'';
+  document.getElementById('et-from').value=trip.from||'';
+  document.getElementById('et-to').value=trip.to||'';
+  document.getElementById('et-date-start').value=dateToISO(trip.dateStart)||'';
+  document.getElementById('et-date-end').value=dateToISO(trip.dateEnd)||'';
+  document.getElementById('et-emoji').value=trip.emoji||'🚗';
+  document.getElementById('edit-trip-modal').classList.add('open');
+}
+function closeEditTrip(){
+  document.getElementById('edit-trip-modal').classList.remove('open');
+  _editTripId=null;
+}
+function saveEditTrip(){
+  const trip=TRIPS.find(t=>t.id===_editTripId);if(!trip)return;
+  const name=document.getElementById('et-name').value.trim();
+  if(!name){toast('Trip name cannot be empty');return;}
+  trip.name=name;
+  trip.from=document.getElementById('et-from').value.trim()||trip.from;
+  trip.to=document.getElementById('et-to').value.trim()||trip.to;
+  trip.dateStart=fmtDate(document.getElementById('et-date-start').value.trim())||trip.dateStart;
+  trip.dateEnd=fmtDate(document.getElementById('et-date-end').value.trim())||trip.dateEnd;
+  trip.emoji=(document.getElementById('et-emoji').value.trim()||trip.emoji).slice(0,2);
+  closeEditTrip();
+  renderAppHome();
+  if(T&&T.id===trip.id){
+    const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=trip.name;
+    const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
+    updateCountdown();
+  }
+  toast('Trip updated! ✓');
+}
+
+// ── DELETE TRIP ────────────────────────────────────────────────────
+let _deleteTripId=null;
+function openDeleteTrip(tid){
+  const trip=TRIPS.find(t=>t.id===tid);if(!trip)return;
+  _deleteTripId=tid;
+  const nm=document.getElementById('delete-trip-name');if(nm)nm.textContent='"'+trip.name+'"';
+  document.getElementById('delete-trip-modal').classList.add('open');
+}
+function closeDeleteTrip(){
+  document.getElementById('delete-trip-modal').classList.remove('open');
+  _deleteTripId=null;
+}
+function confirmDeleteTrip(){
+  if(!_deleteTripId)return;
+  const idx=TRIPS.findIndex(t=>t.id===_deleteTripId);
+  if(idx===-1){closeDeleteTrip();return;}
+  const name=TRIPS[idx].name;
+  TRIPS.splice(idx,1);
+  // If we deleted the active trip, reset T to first remaining trip (or null)
+  if(T&&T.id===_deleteTripId){
+    T=TRIPS[0]||null;
+    CREW=T?T.crew:[];
+    selCrew=CREW[0]||null;
+  }
+  closeDeleteTrip();
+  renderAppHome();
+  toast('"'+name+'" deleted');
+  // If we're inside the deleted trip's home screen, go back to app home
+  goTo('s-app-home');
+}
+
+// ── CREATE TRIP WIZARD ─────────────────────────────────────────────
+let ctState={step:1,name:'',emoji:'🚗',from:'',to:'',dateStart:'',dateEnd:'',avName:'',avProp:'coffee',avColorIdx:0};
+function initCreateTrip(){
+  ctState={step:1,name:'',emoji:'🚗',from:'',to:'',dateStart:'',dateEnd:'',avName:'',avProp:'coffee',avColorIdx:0};
+  ['ct-name','ct-from','ct-to','ct-date-start','ct-date-end','ct-av-name'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const em=document.getElementById('ct-emoji');if(em)em.value='🚗';
+  showCreateStep(1);
+}
+function fmtDate(val){
+  // Convert YYYY-MM-DD (from date input) to "Month DD, YYYY"
+  if(!val)return '';
+  if(val.match(/^\d{4}-\d{2}-\d{2}$/)){
+    const [y,m,d]=val.split('-');
+    const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return months[parseInt(m,10)-1]+' '+parseInt(d,10)+', '+y;
+  }
+  return val; // already formatted
+}
+function dateToISO(val){
+  // Convert "Month DD, YYYY" back to YYYY-MM-DD for date input
+  if(!val)return '';
+  if(val.match(/^\d{4}-\d{2}-\d{2}$/))return val;
+  const d=new Date(val);
+  if(isNaN(d))return '';
+  return d.toISOString().slice(0,10);
+}
+function createTripStep(n){
+  if(n===2){
+    const name=(document.getElementById('ct-name')||{value:''}).value.trim();
+    const from=(document.getElementById('ct-from')||{value:''}).value.trim();
+    const to=(document.getElementById('ct-to')||{value:''}).value.trim();
+    const ds=(document.getElementById('ct-date-start')||{value:''}).value.trim();
+    if(!name||!from||!to||!ds){toast('Fill in trip name, from, to and start date');return;}
+    ctState.name=name;ctState.from=from;ctState.to=to;
+    ctState.dateStart=fmtDate(ds);
+    ctState.dateEnd=fmtDate((document.getElementById('ct-date-end')||{value:''}).value.trim())||ctState.dateStart;
+    ctState.emoji=((document.getElementById('ct-emoji')||{value:'🚗'}).value.trim()||'🚗').slice(0,2);
+  }
+  if(n===3){
+    const an=(document.getElementById('ct-av-name')||{value:''}).value.trim();
+    if(!an){toast('Enter your name for this trip');return;}
+    ctState.avName=an;renderCreateReview();
+  }
+  showCreateStep(n);
+}
+function showCreateStep(n){
+  ctState.step=n;
+  [1,2,3].forEach(i=>{const e=document.getElementById('create-step-'+i);if(e)e.style.display=i===n?'block':'none';const d=document.getElementById('sd-'+i);if(d)d.className='step-dot'+(i===n?' active':'');});
+  const titles={1:'Trip details',2:'Your avatar',3:'Review & create'};
+  const t=document.getElementById('create-step-title');if(t)t.textContent=titles[n]||'';
+  if(n===2){renderCreatePropGrid();renderCreateColorGrid();updateCreatePreview();}
+}
+function renderCreatePropGrid(){
+  const el=document.getElementById('create-prop-grid');if(!el)return;el.innerHTML='';
+  PROPS.forEach(p=>{const t=document.createElement('div');t.className='prop-tile'+(p.key===ctState.avProp?' sel':'');t.innerHTML=`<span style="font-size:22px;">${p.emoji}</span><span class="lbl">${p.label}</span>`;t.onclick=()=>{ctState.avProp=p.key;renderCreatePropGrid();updateCreatePreview();};el.appendChild(t);});
+}
+function renderCreateColorGrid(){
+  const el=document.getElementById('create-color-grid');if(!el)return;el.innerHTML='';
+  AV_COLORS.forEach((c,i)=>{const s=document.createElement('div');s.className='color-swatch'+(i===ctState.avColorIdx?' sel':'');s.style.cssText=`background:${c.bg};border-color:${i===ctState.avColorIdx?'#26215C':c.bg};`;s.onclick=()=>{ctState.avColorIdx=i;renderCreateColorGrid();updateCreatePreview();};el.appendChild(s);});
+}
+function updateCreatePreview(){
+  const el=document.getElementById('create-av-preview');if(!el)return;
+  const name=(document.getElementById('ct-av-name')||{value:ctState.avName||'You'}).value.trim()||ctState.avName||'You';
+  const c=AV_COLORS[ctState.avColorIdx];
+  el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">${svgAv({key:'_new',name,bg:c.bg,color:c.text,prop:ctState.avProp},64)}<div style="font-size:15px;font-weight:600;color:#3C3489;">${name}</div></div>`;
+}
+function renderCreateReview(){
+  const el=document.getElementById('create-review-card');if(!el)return;
+  const c=AV_COLORS[ctState.avColorIdx];
+  el.innerHTML=`<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;"><div style="font-size:36px;">${ctState.emoji}</div><div><div style="font-size:16px;font-weight:600;color:#26215C;">${ctState.name}</div><div style="font-size:12px;color:#AFA9EC;">${ctState.from} → ${ctState.to}</div><div style="font-size:12px;color:#AFA9EC;">${ctState.dateStart}${ctState.dateEnd&&ctState.dateEnd!==ctState.dateStart?' – '+ctState.dateEnd:''}</div></div></div><div style="border-top:1px solid #EEEDFE;padding-top:12px;display:flex;align-items:center;gap:12px;"><div style="width:48px;height:48px;border-radius:50%;background:${c.bg};border:2px solid ${c.text};display:flex;align-items:center;justify-content:center;">${svgAv({key:'_new',name:ctState.avName,bg:c.bg,color:c.text,prop:ctState.avProp},38)}</div><div><div style="font-size:13px;font-weight:600;color:#3C3489;">Joining as <em>${ctState.avName}</em></div><div style="font-size:11px;color:#AFA9EC;">You can edit this from the crew page</div></div></div>`;
+}
+function launchNewTrip(){
+  const c=AV_COLORS[ctState.avColorIdx];
+  const creator={key:'u'+Date.now(),name:ctState.avName,color:c.text,bg:c.bg,prop:ctState.avProp,status:'',_editing:false};
+  const newTrip=makeTripData({
+    id:'t'+Date.now(),name:ctState.name,emoji:ctState.emoji,
+    from:ctState.from,to:ctState.to,dateStart:ctState.dateStart,dateEnd:ctState.dateEnd,
+    dist:'',inviteToken:'ws'+Math.random().toString(36).substr(2,8).toUpperCase(),
+    crew:[creator],
+  });
+  TRIPS.push(newTrip);
+  renderAppHome();
+  // Activate the trip and set selCrew to the creator
+  activateTrip(newTrip);
+  selCrew=creator;selPayer=creator;
+  // Show a post-creation invite prompt before entering the trip
+  openPostCreateInvite(newTrip);
+}
+
+// ── SPLASH ─────────────────────────────────────────────────────────
+function renderSplash(){
+  // Update labels
+  const tn=document.getElementById('splash-trip-name');if(tn)tn.textContent=T.name;
+  const ts=document.getElementById('splash-trip-subtitle');if(ts)ts.textContent=T.from+' → '+T.to+(T.dateStart?' · '+T.dateStart:'');
+  const el=document.getElementById('splash-avatars');if(!el)return;el.innerHTML='';
+  CREW.forEach(c=>{
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;';
+    const isMe=c.key===selCrew.key;
+    const circ=document.createElement('div');
+    circ.style.cssText=`width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${c.bg};border:2.5px solid ${isMe?c.color:'transparent'};transition:border-color .15s;`;
+    circ.innerHTML=svgAv(c,50);
+    circ.onclick=()=>{
+      selCrew=c;selPayer=c;splitKeys=CREW.map(x=>x.key);
+      document.getElementById('splash-picked').textContent=c.name+' is ready to roll!';
+      document.getElementById('splash-status-lbl').textContent='Set your status, '+c.name;
+      document.getElementById('splash-status-input').value=c.status||'';
+      document.getElementById('splash-status-input').oninput=(e)=>{c.status=e.target.value;};
+      document.getElementById('splash-status-wrap').style.display='block';
+      renderSplash();
+    };
+    const lbl=document.createElement('div');lbl.style.cssText='font-size:11px;color:'+c.color+';font-weight:600;text-align:center;margin-top:3px;';lbl.textContent=c.name;
+    wrap.appendChild(circ);wrap.appendChild(lbl);el.appendChild(wrap);
+  });
+  document.getElementById('splash-picked').textContent=selCrew.name+' is ready to roll!';
+  document.getElementById('splash-status-wrap').style.display='block';
+  document.getElementById('splash-status-lbl').textContent='Set your status, '+selCrew.name;
+  document.getElementById('splash-status-input').value=selCrew.status||'';
+  document.getElementById('splash-status-input').oninput=(e)=>{selCrew.status=e.target.value;};
+}
+function enterTrip(){
+  // Sync all screens with this trip's data then go to home
+  const av=document.getElementById('home-av');if(av)av.innerHTML=svgAv(selCrew,36);
+  const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
+  const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=T.from+' → '+T.to+(T.dateStart?' · '+T.dateStart:'');
+  const cdl=document.getElementById('cd-section-lbl');if(cdl)cdl.textContent='Countdown to '+T.name;
+  rebuildCatSelect();
+  renderHomeCrew();updateCountdown();renderStops();
+  renderHighlights();renderAlbumPreview();
+  renderBingo();renderDareList();renderPC();
+  refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
+  renderSongs();renderCrewCards();renderWrap();
+  const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
+  const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
+  // Days = difference between start and end date, or 1 if same
+  const dy=document.getElementById('home-days');
+  if(dy){
+    if(T.dateStart&&T.dateEnd&&T.dateEnd!==T.dateStart){
+      const s=new Date(T.dateStart),e=new Date(T.dateEnd);
+      const diff=Math.round((e-s)/86400000)+1;
+      dy.textContent=isNaN(diff)||diff<1?'1':String(diff);
+    }else{dy.textContent='1';}
+  }
+  goTo('s-home');
+}
+
+// ── HOME ───────────────────────────────────────────────────────────
+function renderHomeCrew(){
+  const el=document.getElementById('home-crew-badges');if(!el)return;el.innerHTML='';
+  CREW.forEach(c=>{const b=document.createElement('span');b.className='pill';b.style.cssText=`background:${c.bg};color:${c.color};display:inline-flex;align-items:center;gap:4px;`;b.innerHTML=svgAv(c,14)+'&nbsp;'+c.name;el.appendChild(b);});
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────────────────
+function updateCountdown(){
+  if(!T.dateStart){const b=document.getElementById('cd-box');if(b)b.style.display='none';return;}
+  // Parse "Month DD, YYYY" format reliably — use space before time, not T
+  const cleaned=T.dateStart.replace(/,/g,'');
+  const tgt=new Date(cleaned+' 06:00:00');
+  if(isNaN(tgt.getTime())){const b=document.getElementById('cd-box');if(b)b.style.display='none';return;}
+  const now=new Date(),diff=tgt-now;
+  const lbl=document.getElementById('cd-section-lbl');if(lbl)lbl.textContent='Countdown to '+T.name;
+  const cdBox=document.getElementById('cd-box');
+  if(diff<=0){
+    if(cdBox)cdBox.style.display='none';
+    const m=document.getElementById('cd-msg');if(m){m.textContent='🎉 The trip is ON!';m.style.display='';}
+    return;
+  }
+  if(cdBox)cdBox.style.display='flex';
+  document.getElementById('cd-days').textContent=Math.floor(diff/86400000);
+  document.getElementById('cd-hours').textContent=Math.floor((diff%86400000)/3600000);
+  const minSep=document.getElementById('cd-min-sep'),minUnit=document.getElementById('cd-min-unit');
+  if(diff/3600000<5){
+    if(minSep)minSep.style.display='';
+    if(minUnit)minUnit.style.display='';
+    document.getElementById('cd-mins').textContent=Math.floor((diff%3600000)/60000);
+  }else{
+    if(minSep)minSep.style.display='none';
+    if(minUnit)minUnit.style.display='none';
+  }
+  const msg=document.getElementById('cd-msg');if(msg)msg.textContent='until the adventure begins!';
+}
+
+// ── STOPS ──────────────────────────────────────────────────────────
+const STATUS_CYCLE_FULL=['upcoming','en-route','here','done'];
+const STATUS_CYCLE_FIRST=['upcoming','done'];
+function catOptHTML(sel){return Object.entries(T.catMeta).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${v.label}</option>`).join('');}
+function rebuildCatSelect(){const s=document.getElementById('new-stop-cat');if(!s)return;s.innerHTML=catOptHTML('');}
+function cycleStop(i){
+  const stops=T.stops,cycle=i===0?STATUS_CYCLE_FIRST:STATUS_CYCLE_FULL;
+  const cur=stops[i].status,next=cycle[(cycle.indexOf(cur)+1)%cycle.length];
+  stops[i].status=next;
+  if(next==='done'&&i+1<stops.length&&stops[i+1].status==='upcoming')stops[i+1].status='en-route';
+  pushNotif(selCrew.name+' marked "'+stops[i].name.split(',')[0]+'" as '+STATUS_META[next].lbl);
+  renderStops();toast('Marked: '+STATUS_META[next].lbl);
+}
+let dragIdx=null;
+function renderStops(){
+  const el=document.getElementById('stops-list');if(!el)return;el.innerHTML='';
+  const stops=T.stops;
+  const rd=document.getElementById('route-dist');if(rd)rd.textContent=T.dist||'? km';
+  stops.forEach((s,i)=>{
+    const meta=T.catMeta[s.cat]||T.catMeta.other,pm=STATUS_META[s.status]||STATUS_META.upcoming;
+    const wrap=document.createElement('div');wrap.className='stop-row-wrap';
+    wrap.draggable=true;
+    wrap.addEventListener('dragstart',e=>{dragIdx=i;e.dataTransfer.effectAllowed='move';});
+    wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.style.outline='2px solid #7F77DD';});
+    wrap.addEventListener('dragleave',()=>{wrap.style.outline='';});
+    wrap.addEventListener('drop',e=>{e.preventDefault();wrap.style.outline='';if(dragIdx!==null&&dragIdx!==i){const m=stops.splice(dragIdx,1)[0];stops.splice(i,0,m);}dragIdx=null;renderStops();});
+    wrap.addEventListener('dragend',()=>{wrap.style.outline='';dragIdx=null;});
+    const row=document.createElement('div');row.className='stop-row';
+    row.innerHTML=`<div style="color:#CECBF6;padding:2px 4px;cursor:grab;" onclick="event.stopPropagation()">⠿</div>
+      <div style="width:10px;height:10px;border-radius:50%;background:${meta.dot};flex-shrink:0;margin-top:5px;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:500;color:#3C3489;">${s.name}</div>
+        <div style="font-size:12px;color:#AFA9EC;margin-top:2px;">${s.sub}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+          <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${meta.color};color:${meta.text};">${meta.label}</span>
+          ${s.url?`<a href="${s.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#7F77DD;text-decoration:none;">📍 Maps</a>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+        <div onclick="event.stopPropagation();cycleStop(${i})" style="cursor:pointer;text-align:center;">
+          <span class="pill ${pm.cls}" style="font-size:10px;">${pm.lbl}</span>
+          <div style="font-size:9px;color:#CECBF6;margin-top:1px;">tap</div>
+        </div>
+        <div style="color:#AFA9EC;font-size:12px;">${s.open?'▲':'▼'}</div>
+      </div>`;
+    row.onclick=()=>{s.open=!s.open;renderStops();};
+    wrap.appendChild(row);
+    if(s.open){
+      const panel=document.createElement('div');panel.className='stop-edit';
+      panel.innerHTML=`<label class="form-lbl" style="margin-top:0;">Place name</label><input type="text" value="${s.name}" oninput="T.stops[${i}].name=this.value" onclick="event.stopPropagation()"/>
+        <label class="form-lbl">Note</label><input type="text" value="${s.sub}" oninput="T.stops[${i}].sub=this.value" onclick="event.stopPropagation()"/>
+        <label class="form-lbl">Category</label><select onchange="T.stops[${i}].cat=this.value;renderStops()" onclick="event.stopPropagation()">${catOptHTML(s.cat)}</select>
+        <label class="form-lbl">Maps link</label><input type="url" value="${s.url||''}" oninput="T.stops[${i}].url=this.value" onclick="event.stopPropagation()" placeholder="Paste Google Maps link"/>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="small-btn save-btn" style="flex:1;justify-content:center;" onclick="event.stopPropagation();T.stops[${i}].open=false;renderStops();toast('Stop saved!')">✓ Save</button>
+          <button class="del-btn" onclick="event.stopPropagation();T.stops.splice(${i},1);renderStops();">✕ Delete</button>
+        </div>`;
+      wrap.appendChild(panel);
+    }
+    el.appendChild(wrap);
+  });
+  const ss=document.getElementById('stat-stops');if(ss)ss.textContent=stops.length;
+  const sub=document.getElementById('home-stops-sub');if(sub)sub.textContent=stops.length+' stops';
+}
+function saveNewStop(){
+  const n=(document.getElementById('new-stop-name')||{value:''}).value.trim();if(!n)return;
+  T.stops.push({name:n,sub:(document.getElementById('new-stop-sub')||{value:''}).value.trim()||'Stop',url:(document.getElementById('new-stop-url')||{value:''}).value.trim(),status:'upcoming',cat:(document.getElementById('new-stop-cat')||{value:'other'}).value,open:false});
+  ['new-stop-name','new-stop-sub','new-stop-url'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  toggleForm('add-stop-form');renderStops();toast('Stop added!');
+}
+
+// ── HIGHLIGHTS ─────────────────────────────────────────────────────
+function renderHighlights(){
+  const el=document.getElementById('mem-feed');if(!el)return;el.innerHTML='';
+  T.highlights.forEach((h,i)=>{
+    const card=document.createElement('div');card.className='hl-card';
+    card.innerHTML=`<span class="hl-text">${h}</span><button class="hl-del" onclick="T.highlights.splice(${i},1);renderHighlights()" title="Remove">✕</button>`;
+    el.appendChild(card);
+  });
+}
+function saveHighlight(){
+  const v=(document.getElementById('new-highlight')||{value:''}).value.trim();if(!v)return;
+  T.highlights.push(v);document.getElementById('new-highlight').value='';
+  renderHighlights();toast('Highlight saved!');
+}
+
+// ── ALBUM ──────────────────────────────────────────────────────────
+const SEED_ALBUM_URL='https://photos.app.goo.gl/nSjzTZj5JuNMxXWM9';
+const ALBUM_PLACEHOLDERS=[
+  {emoji:'🌅',label:'Sunrise'},{emoji:'🐦',label:'Birds'},{emoji:'🌿',label:'Greenery'},
+  {emoji:'🍳',label:'Breakfast'},{emoji:'🛣️',label:'Highway'},{emoji:'☕',label:'Coffee'},
+  {emoji:'🌸',label:'Flowers'},{emoji:'🌙',label:'Night'},{emoji:'✨',label:'Crew selfie'},
+];
+
+function renderAlbumPreview(){
+  const el=document.getElementById('album-section');if(!el)return;
+  el.innerHTML='';
+  if(T.albumSetupDone&&T.albumUrl){
+    // Show the photo grid + view album link
+    const tile=document.createElement('div');tile.className='photo-album-tile';
+    tile.innerHTML=`<div id="album-preview-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;"></div>
+      <div style="text-align:center;padding:10px 12px 12px;">
+        <a href="${T.albumUrl}" target="_blank" class="small-btn edit-btn" style="font-size:12px;padding:7px 20px;">View full album</a>
+      </div>`;
+    el.appendChild(tile);
+    // Load photos
+    if(T.albumPhotoSrcs&&T.albumPhotoSrcs.length>=3)renderAlbumGrid(T.albumPhotoSrcs);
+    else fetchAlbumPhotos();
+  } else {
+    // Show setup card with instructions + URL input
+    const setup=document.createElement('div');
+    setup.style.cssText='background:#F7F5FF;border-radius:14px;padding:18px;border:1px solid #EEEDFE;margin-bottom:4px;';
+    setup.innerHTML=`
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="font-size:28px;flex-shrink:0;">📸</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#3C3489;margin-bottom:4px;">Link your Google Photos album</div>
+          <div style="font-size:12px;color:#AFA9EC;line-height:1.6;">Create a shared album in Google Photos, add your trip photos there, and paste the share link below. Everyone in the trip can view it.</div>
+        </div>
+      </div>
+      <div style="background:#EEEDFE;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#534AB7;line-height:1.7;">
+        <strong>How to get the link:</strong><br>
+        1. Open Google Photos → Albums<br>
+        2. Create or open your trip album<br>
+        3. Tap Share → Create link<br>
+        4. Copy and paste it below
+      </div>
+      <label class="form-lbl" style="margin-top:0;">Google Photos album link</label>
+      <input type="url" id="album-url-input" placeholder="https://photos.app.goo.gl/..." style="margin-bottom:10px;"/>
+      <button class="primary-btn" style="margin-top:4px;" onclick="saveAlbumUrl()">Link album</button>`;
+    el.appendChild(setup);
+  }
+}
+
+function saveAlbumUrl(){
+  const input=document.getElementById('album-url-input');
+  const url=(input?input.value:'').trim();
+  if(!url||!url.startsWith('http')){toast('Paste a valid Google Photos link');return;}
+  T.albumUrl=url;T.albumSetupDone=true;
+  renderAlbumPreview();
+  toast('Album linked! 📸');
+}
+
+async function fetchAlbumPhotos(){
+  const el=document.getElementById('album-preview-grid');if(!el)return;
+  el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:#AFA9EC;font-size:12px;">Loading photos…</div>';
+  try{
+    // Only attempt RSS fetch for the known seed album — Google Photos blocks third-party CORS
+    if(T.id===SEED_ID){
+      const rssUrl='https://picasaweb.google.com/data/feed/api/user/default/albumid/nSjzTZj5JuNMxXWM9?alt=rss&kind=photo&max-results=9&imgmax=400';
+      const res=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(rssUrl),{signal:AbortSignal.timeout(6000)});
+      if(!res.ok)throw new Error();
+      const text=await res.text();
+      const matches=[...text.matchAll(/<media:content[^>]+url="([^"]+)"/g)];
+      const thumbs=matches.map(m=>m[1]).slice(0,9);
+      if(thumbs.length>=3){T.albumPhotoSrcs=thumbs;renderAlbumGrid(thumbs);return;}
+    }
+    throw new Error('no photos');
+  }catch{renderAlbumPlaceholders();}
+}
+
+function renderAlbumGrid(srcs){
+  ['album-preview-grid','wrap-album-grid'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+    srcs.slice(0,9).forEach(src=>{
+      const item=document.createElement('div');item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;';
+      const img=document.createElement('img');img.src=src;img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+      img.onerror=()=>{item.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">📷</div>';};
+      item.appendChild(img);item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');el.appendChild(item);
+    });
+  });
+}
+function renderAlbumPlaceholders(){
+  ['album-preview-grid','wrap-album-grid'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+    ALBUM_PLACEHOLDERS.forEach(p=>{
+      const item=document.createElement('div');item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;gap:2px;';
+      item.innerHTML=p.emoji+'<span style="font-size:8px;color:#534AB7;font-weight:500;text-align:center;">'+p.label+'</span>';
+      item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');el.appendChild(item);
+    });
+  });
+}
+
+// ── GAMES ──────────────────────────────────────────────────────────
+function renderBingo(){
+  const el=document.getElementById('bingo-grid');if(!el)return;el.innerHTML='';
+  const g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;';
+  T.bingo.forEach((item,i)=>{
+    const cell=document.createElement('div');
+    cell.style.cssText=`padding:10px 8px;border-radius:10px;font-size:12px;cursor:pointer;border:1.5px solid ${item.d?'#7F77DD':'#EEEDFE'};background:${item.d?'#EEEDFE':'#fff'};color:${item.d?'#534AB7':'#3C3489'};display:flex;align-items:center;gap:4px;`;
+    const span=document.createElement('span');span.style.flex='1';span.textContent=item.t;
+    cell.appendChild(span);
+    if(item.d&&item.by){
+      const m=CREW.find(c=>c.key===item.by);
+      if(m){const av=document.createElement('div');av.style.cssText=`width:22px;height:22px;border-radius:50%;background:${m.bg};border:1.5px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,16);av.title=m.name;cell.appendChild(av);}
+    }
+    const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:16px;padding:0 2px;';del.textContent='×';del.title='Remove';
+    del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();};cell.appendChild(del);
+    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;}renderBingo();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
+    g.appendChild(cell);
+  });
+  el.appendChild(g);
+}
+function saveBingo(){const v=(document.getElementById('new-bingo')||{value:''}).value.trim();if(!v)return;T.bingo.push({t:v,d:false,by:null});document.getElementById('new-bingo').value='';toggleForm('bingo-form');renderBingo();toast('Square added!');}
+function shuffleDare(){const el=document.getElementById('dare-text');if(!T.dares.length){if(el)el.textContent='Add some dares first!';return;}const d=T.dares[Math.floor(Math.random()*T.dares.length)];if(el)el.textContent=d;}
+function renderDareList(){
+  const el=document.getElementById('dare-list-all');if(!el)return;el.innerHTML='';
+  const cnt=document.getElementById('dare-pool-count');if(cnt)cnt.textContent='('+T.dares.length+')';
+  const dc=document.getElementById('dares-count');if(dc)dc.textContent=T.dares.length+' dares in the pool';
+  T.dares.forEach((d,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F0FE;';
+    row.innerHTML=`<div style="flex:1;font-size:13px;color:#3C3489;">${d}</div>`;
+    const btn=document.createElement('button');btn.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;';btn.textContent='×';
+    btn.onclick=()=>{T.dares.splice(i,1);renderDareList();toast('Dare removed');};row.appendChild(btn);el.appendChild(row);
+  });
+}
+function saveNewDare(){const v=(document.getElementById('new-dare')||{value:''}).value.trim();if(!v)return;T.dares.push(v);document.getElementById('new-dare').value='';toggleForm('dare-add-form');renderDareList();toast('Dare added!');}
+function renderPC(){
+  const el=document.getElementById('photo-challenges');if(!el)return;el.innerHTML='';
+  const done=T.photoChallenge.filter(c=>c.done).length;
+  const prog=document.getElementById('pc-prog');if(prog)prog.textContent=done+' / '+T.photoChallenge.length+' completed';
+  T.photoChallenge.forEach((ch,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F3F0FE;cursor:pointer;';
+    const ico=ch.done?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+    const span=document.createElement('span');span.style.cssText=`flex:1;font-size:14px;color:${ch.done?'#AFA9EC':'#3C3489'};text-decoration:${ch.done?'line-through':'none'}`;span.textContent=ch.text;
+    row.innerHTML=`<div style="flex-shrink:0;">${ico}</div>`;row.appendChild(span);
+    if(ch.done&&ch.by){const m=CREW.find(c=>c.key===ch.by);if(m){const av=document.createElement('div');av.style.cssText=`width:26px;height:26px;border-radius:50%;background:${m.bg};border:2px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,20);av.title=m.name;row.appendChild(av);}}
+    const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;flex-shrink:0;';del.textContent='×';del.onclick=(e)=>{e.stopPropagation();T.photoChallenge.splice(i,1);renderPC();};row.appendChild(del);
+    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;}renderPC();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
+    el.appendChild(row);
+  });
+}
+function savePC(){const v=(document.getElementById('new-pc')||{value:''}).value.trim();if(!v)return;T.photoChallenge.push({text:v,done:false,by:null});document.getElementById('new-pc').value='';toggleForm('pc-form');renderPC();toast('Challenge added!');}
+
+// ── PACKING ────────────────────────────────────────────────────────
+function refreshPack(){
+  const av=document.getElementById('pack-topbar-av');if(av)av.innerHTML=svgAv(selCrew,28);
+  const b=document.getElementById('pack-banner');if(b)b.innerHTML=`ℹ️ <span>Packing as <strong>${selCrew.name}</strong> — tap circle to tick items.</span>`;
+  renderPack();
+}
+function renderPack(){
+  const el=document.getElementById('pack-list');if(!el)return;el.innerHTML='';
+  T.pack.forEach((item,i)=>{
+    const mine=!!(item.ticked&&item.ticked[selCrew.key]);
+    const cnt=CREW.filter(c=>item.ticked&&item.ticked[c.key]).length;
+    const row=document.createElement('div');row.className='pack-item';
+    const ico=document.createElement('button');ico.type='button';ico.style.cssText='background:none;border:none;cursor:pointer;flex-shrink:0;padding:0;display:flex;align-items:center;';
+    ico.innerHTML=mine?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+    ico.onclick=()=>togglePack(i);
+    const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;cursor:pointer;';
+    info.innerHTML=`<div style="font-size:14px;color:${mine?'#AFA9EC':'#3C3489'};text-decoration:${mine?'line-through':'none'};">${item.text}</div><div style="font-size:11px;color:#AFA9EC;margin-top:2px;">${cnt}/${CREW.length} packed</div>`;
+    info.onclick=()=>togglePack(i);
+    const avs=document.createElement('div');avs.style.cssText='display:flex;gap:3px;align-items:center;';
+    CREW.forEach(c=>{const d=document.createElement('div');d.style.cssText=`width:20px;height:20px;border-radius:50%;background:${item.ticked&&item.ticked[c.key]?c.bg:'#F3F0FE'};border:1.5px solid ${item.ticked&&item.ticked[c.key]?c.color:'#EEEDFE'};display:flex;align-items:center;justify-content:center;opacity:${item.ticked&&item.ticked[c.key]?1:0.3};`;d.innerHTML=svgAv(c,16);avs.appendChild(d);});
+    const del=document.createElement('button');del.style.cssText='background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:11px;padding:5px 8px;border-radius:6px;margin-left:4px;';del.textContent='✕';del.onclick=()=>{T.pack.splice(i,1);renderPack();};
+    avs.appendChild(del);row.appendChild(ico);row.appendChild(info);row.appendChild(avs);el.appendChild(row);
+  });
+}
+function togglePack(i){if(!T.pack[i].ticked)T.pack[i].ticked={};T.pack[i].ticked[selCrew.key]=!T.pack[i].ticked[selCrew.key];renderPack();if(T.pack[i].ticked[selCrew.key])toast(selCrew.name+' packed this ✓');}
+function savePackItem(){const v=(document.getElementById('new-pack-item')||{value:''}).value.trim();if(!v)return;T.pack.push({text:v,ticked:{}});document.getElementById('new-pack-item').value='';toggleForm('pack-form');renderPack();toast('Item added!');}
+
+// ── SOUNDTRACK ─────────────────────────────────────────────────────
+function parseSongFromUrl(url){
+  url=(url||'').trim();let title='',trackId='';
+  if(url.includes('spotify')){const m=url.match(/track[\/:]([A-Za-z0-9]+)/);if(m)trackId=m[1];title=trackId?'Spotify track':'Spotify link';}
+  return{title,trackId};
+}
+function previewSongLink(url){
+  const pr=document.getElementById('song-link-preview'),te=document.getElementById('song-preview-title'),se=document.getElementById('song-preview-sub');
+  if(!url||url.length<10){if(pr)pr.style.display='none';return;}
+  const{title,trackId}=parseSongFromUrl(url);
+  if(pr&&title){pr.style.display='block';te.textContent=title;se.textContent='🎵 Spotify'+(trackId?' · track detected':'');}else if(pr){pr.style.display='none';}
+}
+function openSongForm(){toggleForm('song-form');const lbl=document.getElementById('song-adder-label');if(lbl)lbl.textContent='Adding as: '+selCrew.name;}
+function renderSongs(){
+  const sl=document.getElementById('songs-list');if(!sl)return;sl.innerHTML='';
+  const pbw=document.getElementById('spotify-playlist-btn-wrap');
+  if(pbw){
+    if(T.spotifyCreated){
+      const cur=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
+      const hasNew=JSON.stringify(cur)!==JSON.stringify(T.spotifyTrackIds);
+      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="updateSpotifyPlaylist()">${spotifyIcon()} ${hasNew?'Update playlist ↗':'Open in Spotify ↗'}</button>`;
+    }else if(T.songs.length>0){
+      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="createSpotifyPlaylist()">${spotifyIcon()} Create Spotify playlist</button>`;
+    }else pbw.innerHTML='';
+  }
+  if(!T.songs.length){sl.innerHTML='<div style="text-align:center;color:#AFA9EC;font-size:13px;padding:20px 0;">No songs yet — add one below!</div>';return;}
+  T.songs.forEach((s,i)=>{
+    const m=CREW.find(x=>x.key===s.who)||CREW[0]||{name:'?',bg:'#EEEDFE',color:'#534AB7'};
+    const row=document.createElement('div');row.className='song-row';
+    row.innerHTML=`<div style="width:34px;height:34px;border-radius:8px;background:#E8FAF2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${spotifyIcon()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;color:#3C3489;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+        ${s.memory?`<div style="font-size:11px;color:#AFA9EC;">${s.memory}</div>`:''}
+        ${s.url?`<a href="${s.url}" target="_blank" style="font-size:11px;color:#1DB954;text-decoration:none;">▶ Open in Spotify</a>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+        <span class="pill" style="font-size:10px;background:${m.bg};color:${m.color};">${m.name}</span>
+        <div style="display:flex;gap:4px;">
+          <button class="small-btn edit-btn" style="padding:3px 7px;font-size:11px;" onclick="openSongModal(${i})">✏ Edit</button>
+          <button class="del-btn" style="padding:5px 8px;" onclick="T.songs.splice(${i},1);renderSongs();">✕</button>
+        </div>
+      </div>`;
+    sl.appendChild(row);
+  });
+}
+function spotifyIcon(){return'<svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';}
+function saveSong(){
+  const url=(document.getElementById('new-song-url')||{value:''}).value.trim();if(!url)return;
+  const{title}=parseSongFromUrl(url);
+  const override=(document.getElementById('new-song-name-override')||{value:''}).value.trim();
+  T.songs.push({name:override||title||'Song',url,platform:'spotify',who:selCrew.key,memory:''});
+  ['new-song-url','new-song-name-override'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const pr=document.getElementById('song-link-preview');if(pr)pr.style.display='none';
+  toggleForm('song-form');
+  toast(T.spotifyCreated?'Added! Tap "Update playlist" to sync 🎵':'Added to soundtrack!');
+  renderSongs();
+}
+function openSongModal(i){editSongIdx=i;document.getElementById('edit-song-memory').value=T.songs[i].memory||'';document.getElementById('song-edit-modal').style.display='flex';}
+function closeSongModal(){document.getElementById('song-edit-modal').style.display='none';editSongIdx=-1;}
+function saveSongMemory(){if(editSongIdx<0)return;T.songs[editSongIdx].memory=document.getElementById('edit-song-memory').value.trim();closeSongModal();renderSongs();toast('Memory saved!');}
+function openAllInSpotify(ids){
+  if(!ids.length){window.open('https://open.spotify.com','_blank');return;}
+  ids.forEach((id,i)=>{if(i===0||i===ids.length-1){setTimeout(()=>{const a=document.createElement('a');a.href=i===0?`spotify:track:${id}`:`https://open.spotify.com/track/${id}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();},i*250);}});
+  toast('Opening Spotify with '+ids.length+' track'+(ids.length>1?'s':'')+' 🎵');
+}
+function createSpotifyPlaylist(){
+  const ids=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
+  T.spotifyCreated=true;T.spotifyTrackIds=[...ids];renderSongs();openAllInSpotify(ids);
+}
+function updateSpotifyPlaylist(){
+  const ids=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
+  T.spotifyTrackIds=[...ids];renderSongs();openAllInSpotify(ids);
+}
+
+// ── EXPENSES ───────────────────────────────────────────────────────
+function safeEval(expr){const c=expr.replace(/[^0-9+\-*/.() ]/g,'');try{const r=Function('"use strict";return ('+c+')')();if(typeof r==='number'&&isFinite(r))return Math.round(r*100)/100;}catch(e){}return null;}
+function evalAmountLive(inp){const v=inp.value.trim(),pr=document.getElementById('exp-amt-preview');if(!pr)return;if(/[+\-*/]/.test(v)){const r=safeEval(v);if(r!==null&&r!==Number(v))pr.textContent='= ₹'+r;else pr.textContent='';}else pr.textContent='';}
+function evalAmount(inp){const v=inp.value.trim();if(/[+\-*/]/.test(v)){const r=safeEval(v);if(r!==null){inp.value=String(r);const p=document.getElementById('exp-amt-preview');if(p)p.textContent='';}}}
+function onPickPayer(key){selPayer=CREW.find(c=>c.key===key)||selPayer;renderAvSel('exp-payer-btns',selPayer.key,onPickPayer);}
+function onToggleSplit(key){if(splitKeys.includes(key)&&splitKeys.length>1)splitKeys=splitKeys.filter(x=>x!==key);else if(!splitKeys.includes(key))splitKeys.push(key);renderAvMulti('exp-split-btns',splitKeys,onToggleSplit);const h=document.getElementById('exp-split-hint');if(h)h.textContent=splitKeys.length===CREW.length?'All will split equally':splitKeys.length+' people splitting';}
+function renderExpPayerBtns(){selPayer=selCrew;renderAvSel('exp-payer-btns',selPayer.key,onPickPayer);}
+function renderSplitBtns(){splitKeys=CREW.map(c=>c.key);renderAvMulti('exp-split-btns',splitKeys,onToggleSplit);}
+function renderAvSel(cid,selKey,onSel){
+  const el=document.getElementById(cid);if(!el)return;el.innerHTML='';
+  CREW.forEach(c=>{
+    const isOn=c.key===selKey;
+    const btn=document.createElement('button');btn.type='button';
+    btn.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;padding:6px 8px;border-radius:10px;background:${isOn?c.bg:'transparent'};`;
+    btn.innerHTML=`<div style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${c.bg};border:3px solid ${isOn?c.color:'transparent'};opacity:${isOn?1:0.3};">${svgAv(c,38)}</div><div style="font-size:11px;font-weight:${isOn?700:500};color:${isOn?c.color:'#AFA9EC'};">${c.name}</div>`;
+    btn.onclick=()=>onSel(c.key);el.appendChild(btn);
+  });
+}
+function renderAvMulti(cid,activeKeys,onToggle){
+  const el=document.getElementById(cid);if(!el)return;el.innerHTML='';
+  CREW.forEach(c=>{
+    const isOn=activeKeys.includes(c.key);
+    const btn=document.createElement('button');btn.type='button';
+    btn.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;padding:6px 8px;border-radius:10px;background:${isOn?c.bg:'transparent'};`;
+    btn.innerHTML=`<div style="position:relative;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${c.bg};border:3px solid ${isOn?c.color:'transparent'};opacity:${isOn?1:0.3};">${svgAv(c,34)}${isOn?'<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#534AB7;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;">✓</div>':''}</div><div style="font-size:11px;font-weight:${isOn?700:500};color:${isOn?c.color:'#AFA9EC'};">${c.name}</div>`;
+    btn.onclick=()=>onToggle(c.key);el.appendChild(btn);
+  });
+}
+function renderExpenses(){
+  const total=T.expenses.reduce((s,e)=>s+e.amount,0);
+  const allOwed={};CREW.forEach(c=>{allOwed[c.key]=0;});
+  T.expenses.forEach(e=>{const sp=e.split||CREW.map(c=>c.key),sh=e.amount/sp.length;sp.forEach(k=>{if(allOwed[k]!==undefined)allOwed[k]+=sh;});});
+  document.getElementById('exp-total').textContent='₹'+Math.round(total);
+  document.getElementById('exp-per').textContent='₹'+Math.round(allOwed[selCrew.key]||0);
+  // Balances — only for unsettled pairs
+  const bEl=document.getElementById('exp-balances');bEl.innerHTML='';
+  const me=selCrew.key;let anyBal=false;
+  CREW.forEach(c=>{
+    if(c.key===me)return;
+    const pk=[me,c.key].sort().join('_');
+    if(T.settledPairs.includes(pk))return;
+    let net=0;
+    T.expenses.forEach(e=>{const sp=e.split||CREW.map(x=>x.key);if(e.payer===c.key&&sp.includes(me))net-=e.amount/sp.length;if(e.payer===me&&sp.includes(c.key))net+=e.amount/sp.length;});
+    if(Math.abs(net)<0.5)return;
+    anyBal=true;
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F0FE;';
+    const col=net>0?'#0F6E56':'#993556';
+    const txt=net>0?`${c.name} owes you ₹${Math.round(net)}`:`You owe ${c.name} ₹${Math.round(-net)}`;
+    const sb=document.createElement('button');sb.className='small-btn save-btn';sb.style.cssText='padding:4px 8px;font-size:10px;flex-shrink:0;';sb.textContent='✓ Done';
+    sb.onclick=()=>{if(!T.settledPairs.includes(pk))T.settledPairs.push(pk);renderExpenses();toast('Settled with '+c.name+' ✓');};
+    row.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(c,24)}</div><div style="flex:1;font-size:13px;color:${col};font-weight:500;">${txt}</div>`;
+    row.appendChild(sb);bEl.appendChild(row);
+  });
+  if(!anyBal)bEl.innerHTML='<div style="font-size:13px;color:#AFA9EC;padding:8px 0;">All settled! 🎉</div>';
+  // Full expense record — never greyed, never struck through
+  const eEl=document.getElementById('exp-list');eEl.innerHTML='';
+  T.expenses.forEach((e,i)=>{
+    const pc=CREW.find(c=>c.key===e.payer)||CREW[0]||{name:'?',bg:'#EEEDFE',color:'#534AB7'};
+    const spNames=(e.split||CREW.map(c=>c.key)).map(k=>cName(k)).join(', ');
+    const row=document.createElement('div');row.className='exp-row';
+    row.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;background:${pc.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(pc,22)}</div><div style="flex:1;min-width:0;"><div style="font-size:13px;color:#3C3489;">${e.desc}</div><div style="font-size:11px;color:#AFA9EC;">Paid by ${pc.name} · split: ${spNames}</div></div><div style="font-size:14px;font-weight:600;color:#3C3489;flex-shrink:0;margin-right:6px;">₹${e.amount}</div><button style="background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:12px;padding:5px 9px;border-radius:6px;" onclick="T.expenses.splice(${i},1);renderExpenses();">✕</button>`;
+    eEl.appendChild(row);
+  });
+  if(!T.expenses.length)eEl.innerHTML='<div style="font-size:13px;color:#AFA9EC;padding:8px 0;">No expenses yet</div>';
+  const sub=document.getElementById('home-exp-sub');if(sub)sub.textContent=T.expenses.length?'₹'+Math.round(total)+' total':'Track who paid what';
+}
+function saveExp(){
+  const desc=(document.getElementById('new-exp-desc')||{value:''}).value.trim();
+  const rawAmt=(document.getElementById('new-exp-amount')||{value:''}).value.trim();
+  const amt=safeEval(rawAmt)||parseFloat(rawAmt);
+  if(!desc||!amt)return;
+  T.expenses.push({desc,amount:amt,payer:selPayer.key,split:[...splitKeys]});
+  ['new-exp-desc','new-exp-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const p=document.getElementById('exp-amt-preview');if(p)p.textContent='';
+  toggleForm('exp-form');renderExpenses();renderSplitBtns();toast('Expense added!');
+}
+
+// ── CREW ───────────────────────────────────────────────────────────
+function renderCrewInviteBar(){
+  const el=document.getElementById('crew-invite-bar');if(!el||!T)return;
+  const url=genInviteUrl(T);
+  el.innerHTML=`
+    <div style="background:linear-gradient(135deg,#EEEDFE,#E6F1FB);border-radius:14px;padding:14px;border:1px solid #CECBF6;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:24px;">🔗</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#3C3489;">Invite friends</div>
+          <div style="font-size:11px;color:#AFA9EC;margin-top:1px;">They'll pick their avatar and join instantly</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="crewCopyInvite()" style="flex:1;padding:10px;border-radius:10px;border:none;background:#534AB7;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy link
+        </button>
+        ${navigator.share?`<button onclick="crewShareInvite()" style="flex:1;padding:10px;border-radius:10px;border:none;background:#E8FAF2;color:#0F6E56;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>`:''}
+      </div>
+    </div>`;
+}
+function crewCopyInvite(){
+  const url=genInviteUrl(T);
+  navigator.clipboard.writeText(url).then(()=>toast('Invite link copied! 🔗')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    toast('Link copied! 🔗');
+  });
+}
+function crewShareInvite(){
+  navigator.share({title:'Join me on Window Seat! 🚗',text:`Join my trip: ${T.name}`,url:genInviteUrl(T)}).catch(()=>{});
+}
+function renderCrewCards(){
+  renderCrewInviteBar();
+  const el=document.getElementById('crew-cards');if(!el)return;el.innerHTML='';
+  CREW.forEach(c=>{
+    const isMe=c.key===selCrew.key;
+    const card=document.createElement('div');card.className='crew-card';card.style.borderTop='3px solid '+c.bg;
+    if(isMe&&c._editing){
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div><div><div style="font-size:15px;font-weight:600;color:#3C3489;">${c.name}</div><span class="pill p-purple" style="font-size:10px;">You</span></div></div>
+        <label class="form-lbl" style="margin-top:0;">Your name</label><input type="text" id="en-${c.key}" value="${c.name}"/>
+        <label class="form-lbl">Status</label><input type="text" id="es-${c.key}" value="${c.status||''}" placeholder='e.g. "ready to adventure"'/>
+        <div style="display:flex;gap:8px;margin-top:12px;"><button class="small-btn save-btn" style="flex:1;justify-content:center;" onclick="saveCrewEdit('${c.key}')">✓ Save</button><button class="del-btn" onclick="cancelCrewEdit('${c.key}')">✕</button></div>`;
+    }else{
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:12px;"><div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><div style="font-size:16px;font-weight:600;color:#3C3489;">${c.name}</div>${isMe?'<span class="pill p-purple" style="font-size:10px;">You</span>':''}</div><div style="font-size:13px;color:${c.status?c.color:'#CECBF6'};font-style:${c.status?'normal':'italic'};">${c.status||'no status yet'}</div></div>${isMe?`<button class="small-btn edit-btn" onclick="startCrewEdit('${c.key}')">✏ Edit</button>`:''}</div>`;
+    }
+    el.appendChild(card);
+  });
+  renderHomeCrew();
+}
+function startCrewEdit(k){CREW.forEach(x=>x._editing=false);const c=CREW.find(x=>x.key===k);if(c){c._editing=true;renderCrewCards();setTimeout(()=>{const i=document.getElementById('en-'+k);if(i)i.focus();},50);}}
+function saveCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){const n=document.getElementById('en-'+k),s=document.getElementById('es-'+k);if(n&&n.value.trim())c.name=n.value.trim();if(s)c.status=s.value.trim();c._editing=false;renderCrewCards();renderSplash();toast('Profile updated!');}}
+function cancelCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){c._editing=false;renderCrewCards();}}
+
+// ── WRAP ───────────────────────────────────────────────────────────
+function renderWrap(){
+  const el=document.getElementById('wrap-content');if(!el)return;
+  const pill=document.getElementById('wrap-pill');
+  // Unlock at 8PM on the last day of the trip
+  const endStr=T.dateEnd||T.dateStart;
+  let unlocked=false;
+  if(endStr){
+    const cleaned=endStr.replace(/,/g,'');
+    const unlock=new Date(cleaned+' 20:00:00');
+    if(!isNaN(unlock.getTime())&&new Date()>=unlock)unlocked=true;
+  }
+  if(unlocked){
+    if(pill){pill.textContent='Ready! ✨';pill.className='pill p-green';}
+    previewWrap();
+    return;
+  }
+  if(pill){pill.textContent='Unlocks at 8PM on last day';pill.className='pill p-amber';}
+  const unlockDesc=endStr?'8PM on '+endStr:'the end of the trip';
+  el.innerHTML=`<div style="text-align:center;padding:48px 24px;">
+    <div style="font-size:56px;margin-bottom:18px;">🔒</div>
+    <div style="font-size:18px;font-weight:600;color:#3C3489;margin-bottom:10px;">Almost there!</div>
+    <div style="font-size:14px;color:#AFA9EC;line-height:1.7;margin-bottom:24px;">Your scrapbook unlocks at ${unlockDesc} — after you've lived every moment.</div>
+    <div style="display:flex;justify-content:center;">
+      <button class="primary-btn" style="width:auto;padding:12px 32px;" onclick="previewWrap()">👀 Preview (demo)</button>
+    </div>
+  </div>`;
+}
+function previewWrap(){
+  const el=document.getElementById('wrap-content');el.innerHTML='';
+  const hdr=document.createElement('div');hdr.style.cssText='background:linear-gradient(160deg,#EEEDFE,#E1F5EE);padding:24px 18px;text-align:center;border-bottom:1.5px solid #CECBF6;';
+  hdr.innerHTML=`<div style="font-size:36px;margin-bottom:10px;">✨</div><div style="font-size:20px;font-weight:700;color:#26215C;">${T.name}</div><div style="font-size:14px;color:#534AB7;margin-top:4px;">${T.from} → ${T.to}${T.dateStart?' · '+T.dateStart:''}</div>`;
+  el.appendChild(hdr);
+  const albumViewUrl=T.albumUrl||SEED_ALBUM_URL;
+  const sc=document.createElement('div');sc.style.cssText='padding:0 18px 24px;';
+  sc.innerHTML=`<p class="sec-lbl" style="margin-top:18px;">By the numbers</p>
+    <div class="stat-grid">
+      <div class="stat-c" style="background:#EEEDFE;"><div class="stat-lbl">Stops visited</div><div class="stat-val">${T.stops.filter(s=>s.status==='done').length}</div></div>
+      <div class="stat-c" style="background:#E1F5EE;"><div class="stat-lbl">Photos</div><div class="stat-val">${T.albumSetupDone?'9':'—'}</div></div>
+      <div class="stat-c" style="background:#FAEEDA;"><div class="stat-lbl">Highlights</div><div class="stat-val">${T.highlights.length}</div></div>
+      <div class="stat-c" style="background:#FBEAF0;"><div class="stat-lbl">Songs</div><div class="stat-val">${T.songs.length}</div></div>
+    </div>
+    <p class="sec-lbl">The crew</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" id="pw-crew"></div>
+    ${T.albumSetupDone?`
+    <p class="sec-lbl">Photo dump</p>
+    <div style="background:#EEEDFE;border-radius:14px;overflow:hidden;margin-bottom:14px;">
+      <div id="wrap-album-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;"></div>
+      <div style="text-align:center;padding:8px 12px 12px;"><a href="${albumViewUrl}" target="_blank" class="small-btn edit-btn" style="font-size:11px;padding:5px 14px;">View full album</a></div>
+    </div>`:''}
+    <p class="sec-lbl">Highlights</p>
+    ${T.highlights.slice(0,4).map(h=>`<div class="hl-card"><span class="hl-text">${h}</span></div>`).join('')||'<div style="font-size:13px;color:#AFA9EC;padding:8px 0;">No highlights yet</div>'}
+    <p class="sec-lbl" style="margin-top:14px;">Trip soundtrack</p>
+    <div class="note-card"><div class="note-text" style="color:#534AB7;line-height:1.8;">${T.songs.length?T.songs.map(s=>'🎵 '+s.name).join('<br>'):'No songs yet'}</div></div>
+    <div style="text-align:center;padding:24px 0 10px;font-size:15px;color:#534AB7;font-style:italic;">The kind of trip you'll still talk about in 10 years.</div>`;
+  el.appendChild(sc);
+  if(T.albumSetupDone){
+    if(T.albumPhotoSrcs&&T.albumPhotoSrcs.length>=3)renderAlbumGrid(T.albumPhotoSrcs);else renderAlbumPlaceholders();
+  }
+  const pw=sc.querySelector('#pw-crew');if(pw){CREW.forEach(c=>{const b=document.createElement('span');b.className='pill';b.style.cssText=`background:${c.bg};color:${c.color};display:inline-flex;align-items:center;gap:4px;`;b.innerHTML=svgAv(c,14)+'&nbsp;'+c.name+(c.status?' · '+c.status:'');pw.appendChild(b);});}
+  const pill=document.getElementById('wrap-pill');if(pill){pill.textContent='Preview';pill.className='pill p-purple';}
+}
+
+// ── CUSTOM CATEGORY ────────────────────────────────────────────────
+function saveCustomCat(){
+  const nameEl=document.getElementById('new-cat-name');
+  const colorEl=document.getElementById('new-cat-color');
+  const n=(nameEl?nameEl.value:'').trim();
+  if(!n){toast('Enter a category name');return;}
+  const colorMap={
+    purple:{color:'#EEEDFE',text:'#534AB7',dot:'#7F77DD'},
+    teal:{color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
+    blue:{color:'#E6F1FB',text:'#185FA5',dot:'#378ADD'},
+    amber:{color:'#FAEEDA',text:'#854F0B',dot:'#EF9F27'},
+    pink:{color:'#FBEAF0',text:'#993556',dot:'#D4537E'},
+    green:{color:'#EAF3DE',text:'#3B6D11',dot:'#5BA32B'},
+  };
+  const ck=colorEl?colorEl.value:'purple';
+  const cm=colorMap[ck]||colorMap.purple;
+  const key=n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  T.catMeta[key]={label:n,...cm};
+  if(nameEl)nameEl.value='';
+  document.getElementById('custom-cat-form').style.display='none';
+  rebuildCatSelect();
+  const sel=document.getElementById('new-stop-cat');if(sel)sel.value=key;
+  toast('Category "'+n+'" added!');
+}
+
+// ── UTILITIES ──────────────────────────────────────────────────────
+function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
+function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);}
+
+// ── INIT ───────────────────────────────────────────────────────────
+requestNotifPermission();
+checkInviteParam();
+renderAppHome();
+goTo('s-app-home');
+</script>
+</body>
+</html>
