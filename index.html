@@ -4,6 +4,51 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Window Seat 🚗</title>
+
+<!-- PWA: makes it installable as a home screen app -->
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Window Seat"/>
+<meta name="application-name" content="Window Seat"/>
+<meta name="theme-color" content="#26215C"/>
+<meta name="description" content="Your road trip companion — stops, crew, memories and more."/>
+
+<!-- Open Graph for share previews when sending the invite link -->
+<meta property="og:title" content="Window Seat 🚗"/>
+<meta property="og:description" content="You've been invited to a road trip! Open Window Seat to join."/>
+<meta property="og:type" content="website"/>
+
+<!-- Inline SVG favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 54'><rect x='8' y='18' width='64' height='26' rx='8' fill='%23534AB7'/><rect x='14' y='10' width='36' height='18' rx='5' fill='%237F77DD'/><rect x='17' y='13' width='14' height='12' rx='3' fill='%23B5D4F4'/><rect x='33' y='13' width='14' height='12' rx='3' fill='%23FAC775'/><circle cx='22' cy='44' r='6' fill='%2326215C'/><circle cx='22' cy='44' r='3' fill='%23EEEDFE'/><circle cx='58' cy='44' r='6' fill='%2326215C'/><circle cx='58' cy='44' r='3' fill='%23EEEDFE'/></svg>"/>
+
+<!-- Apple touch icon (used when added to home screen on iOS) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%2326215C'/><rect x='56' y='210' width='400' height='162' rx='32' fill='%237F77DD'/><rect x='96' y='112' width='224' height='114' rx='28' fill='%23534AB7'/><rect x='112' y='128' width='88' height='76' rx='14' fill='%23B5D4F4'/><rect x='212' y='128' width='88' height='76' rx='14' fill='%23FAC775'/><circle cx='152' cy='372' r='44' fill='%2326215C'/><circle cx='152' cy='372' r='22' fill='%23EEEDFE'/><circle cx='360' cy='372' r='44' fill='%2326215C'/><circle cx='360' cy='372' r='22' fill='%23EEEDFE'/></svg>"/>
+
+<!-- PWA Manifest injected inline as a blob — works from any origin including file:// -->
+<script>
+(function(){
+  const manifest={
+    name:'Window Seat',
+    short_name:'Window Seat',
+    description:'Your road trip companion',
+    start_url:window.location.pathname||'/',
+    display:'standalone',
+    orientation:'portrait',
+    background_color:'#26215C',
+    theme_color:'#26215C',
+    icons:[
+      {src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%2326215C'/><rect x='56' y='210' width='400' height='162' rx='32' fill='%237F77DD'/><rect x='96' y='112' width='224' height='114' rx='28' fill='%23534AB7'/><rect x='112' y='128' width='88' height='76' rx='14' fill='%23B5D4F4'/><rect x='212' y='128' width='88' height='76' rx='14' fill='%23FAC775'/><circle cx='152' cy='372' r='44' fill='%2326215C'/><circle cx='152' cy='372' r='22' fill='%23EEEDFE'/><circle cx='360' cy='372' r='44' fill='%2326215C'/><circle cx='360' cy='372' r='22' fill='%23EEEDFE'/></svg>",
+       sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'},
+    ],
+  };
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('link');
+  link.rel='manifest';link.href=url;
+  document.head.appendChild(link);
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F0EEFB;}
@@ -738,7 +783,7 @@ function makeTripData(o){
       food:{label:'Food',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
-    spotifyCreated:false,spotifyTrackIds:[],albumPhotoSrcs:[],
+    spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -1246,6 +1291,7 @@ function saveEditTrip(){
   trip.emoji=(document.getElementById('et-emoji').value.trim()||trip.emoji).slice(0,2);
   closeEditTrip();
   renderAppHome();
+  markDirty();
   if(T&&T.id===trip.id){
     const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=trip.name;
     const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
@@ -1280,7 +1326,7 @@ function confirmDeleteTrip(){
   }
   closeDeleteTrip();
   renderAppHome();
-  toast('"'+name+'" deleted');
+  markDirty();saveState();toast('"'+name+'" deleted');
   // If we're inside the deleted trip's home screen, go back to app home
   goTo('s-app-home');
 }
@@ -1404,7 +1450,7 @@ function renderSplash(){
   document.getElementById('splash-status-input').value=selCrew.status||'';
   document.getElementById('splash-status-input').oninput=(e)=>{selCrew.status=e.target.value;};
 }
-function enterTrip(){
+function _enterTrip(){
   // Sync all screens with this trip's data then go to home
   const av=document.getElementById('home-av');if(av)av.innerHTML=svgAv(selCrew,36);
   const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
@@ -1477,7 +1523,7 @@ function cycleStop(i){
   stops[i].status=next;
   if(next==='done'&&i+1<stops.length&&stops[i+1].status==='upcoming')stops[i+1].status='en-route';
   pushNotif(selCrew.name+' marked "'+stops[i].name.split(',')[0]+'" as '+STATUS_META[next].lbl);
-  renderStops();toast('Marked: '+STATUS_META[next].lbl);
+  renderStops();markDirty();toast('Marked: '+STATUS_META[next].lbl);
 }
 let dragIdx=null;
 function renderStops(){
@@ -1534,7 +1580,7 @@ function saveNewStop(){
   const n=(document.getElementById('new-stop-name')||{value:''}).value.trim();if(!n)return;
   T.stops.push({name:n,sub:(document.getElementById('new-stop-sub')||{value:''}).value.trim()||'Stop',url:(document.getElementById('new-stop-url')||{value:''}).value.trim(),status:'upcoming',cat:(document.getElementById('new-stop-cat')||{value:'other'}).value,open:false});
   ['new-stop-name','new-stop-sub','new-stop-url'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  toggleForm('add-stop-form');renderStops();toast('Stop added!');
+  toggleForm('add-stop-form');renderStops();markDirty();toast('Stop added!');
 }
 
 // ── HIGHLIGHTS ─────────────────────────────────────────────────────
@@ -1549,53 +1595,49 @@ function renderHighlights(){
 function saveHighlight(){
   const v=(document.getElementById('new-highlight')||{value:''}).value.trim();if(!v)return;
   T.highlights.push(v);document.getElementById('new-highlight').value='';
-  renderHighlights();toast('Highlight saved!');
+  renderHighlights();markDirty();toast('Highlight saved!');
 }
 
 // ── ALBUM ──────────────────────────────────────────────────────────
+// Google Photos blocks all cross-origin access from static HTML files.
+// Picasa RSS was shut down in 2019. The only working approach without
+// a backend: user imports direct image URLs from the album.
 const SEED_ALBUM_URL='https://photos.app.goo.gl/nSjzTZj5JuNMxXWM9';
-const ALBUM_PLACEHOLDERS=[
-  {emoji:'🌅',label:'Sunrise'},{emoji:'🐦',label:'Birds'},{emoji:'🌿',label:'Greenery'},
-  {emoji:'🍳',label:'Breakfast'},{emoji:'🛣️',label:'Highway'},{emoji:'☕',label:'Coffee'},
-  {emoji:'🌸',label:'Flowers'},{emoji:'🌙',label:'Night'},{emoji:'✨',label:'Crew selfie'},
-];
 
 function renderAlbumPreview(){
   const el=document.getElementById('album-section');if(!el)return;
   el.innerHTML='';
   if(T.albumSetupDone&&T.albumUrl){
-    // Show the photo grid + view album link
+    const hasPhotos=T.albumPhotoSrcs&&T.albumPhotoSrcs.length>0;
     const tile=document.createElement('div');tile.className='photo-album-tile';
-    tile.innerHTML=`<div id="album-preview-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;"></div>
-      <div style="text-align:center;padding:10px 12px 12px;">
-        <a href="${T.albumUrl}" target="_blank" class="small-btn edit-btn" style="font-size:12px;padding:7px 20px;">View full album</a>
+    tile.innerHTML=`
+      <div id="album-preview-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;"></div>
+      <div style="text-align:center;padding:8px 12px 12px;display:flex;gap:8px;justify-content:center;">
+        <a href="${T.albumUrl}" target="_blank" class="small-btn edit-btn" style="font-size:12px;padding:7px 16px;">View full album</a>
+        <button onclick="openPhotoUrlInput()" class="small-btn" style="font-size:12px;padding:7px 14px;background:#F3F0FE;color:#534AB7;border:none;cursor:pointer;">+ Add photos</button>
       </div>`;
     el.appendChild(tile);
-    // Load photos
-    if(T.albumPhotoSrcs&&T.albumPhotoSrcs.length>=3)renderAlbumGrid(T.albumPhotoSrcs);
-    else fetchAlbumPhotos();
+    renderAlbumGrid(T.albumPhotoSrcs||[]);
   } else {
-    // Show setup card with instructions + URL input
     const setup=document.createElement('div');
     setup.style.cssText='background:#F7F5FF;border-radius:14px;padding:18px;border:1px solid #EEEDFE;margin-bottom:4px;';
     setup.innerHTML=`
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
         <div style="font-size:28px;flex-shrink:0;">📸</div>
         <div>
           <div style="font-size:14px;font-weight:600;color:#3C3489;margin-bottom:4px;">Link your Google Photos album</div>
-          <div style="font-size:12px;color:#AFA9EC;line-height:1.6;">Create a shared album in Google Photos, add your trip photos there, and paste the share link below. Everyone in the trip can view it.</div>
+          <div style="font-size:12px;color:#AFA9EC;line-height:1.6;">Paste the shared album link, then import photos to preview them here.</div>
         </div>
       </div>
-      <div style="background:#EEEDFE;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#534AB7;line-height:1.7;">
-        <strong>How to get the link:</strong><br>
-        1. Open Google Photos → Albums<br>
-        2. Create or open your trip album<br>
-        3. Tap Share → Create link<br>
-        4. Copy and paste it below
+      <div style="background:#EEEDFE;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#534AB7;line-height:1.8;">
+        <strong>How to import photos:</strong><br>
+        1. Open Google Photos → your album<br>
+        2. Open a photo → tap ⋮ → <em>Share → Copy link</em><br>
+        3. Paste each link below (up to 9 photos)
       </div>
       <label class="form-lbl" style="margin-top:0;">Google Photos album link</label>
-      <input type="url" id="album-url-input" placeholder="https://photos.app.goo.gl/..." style="margin-bottom:10px;"/>
-      <button class="primary-btn" style="margin-top:4px;" onclick="saveAlbumUrl()">Link album</button>`;
+      <input type="url" id="album-url-input" placeholder="https://photos.app.goo.gl/..."/>
+      <button class="primary-btn" style="margin-top:12px;" onclick="saveAlbumUrl()">Link album &amp; add photos</button>`;
     el.appendChild(setup);
   }
 }
@@ -1606,47 +1648,83 @@ function saveAlbumUrl(){
   if(!url||!url.startsWith('http')){toast('Paste a valid Google Photos link');return;}
   T.albumUrl=url;T.albumSetupDone=true;
   renderAlbumPreview();
-  toast('Album linked! 📸');
+  markDirty();setTimeout(()=>openPhotoUrlInput(),200);
 }
 
-async function fetchAlbumPhotos(){
-  const el=document.getElementById('album-preview-grid');if(!el)return;
-  el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:#AFA9EC;font-size:12px;">Loading photos…</div>';
-  try{
-    // Only attempt RSS fetch for the known seed album — Google Photos blocks third-party CORS
-    if(T.id===SEED_ID){
-      const rssUrl='https://picasaweb.google.com/data/feed/api/user/default/albumid/nSjzTZj5JuNMxXWM9?alt=rss&kind=photo&max-results=9&imgmax=400';
-      const res=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(rssUrl),{signal:AbortSignal.timeout(6000)});
-      if(!res.ok)throw new Error();
-      const text=await res.text();
-      const matches=[...text.matchAll(/<media:content[^>]+url="([^"]+)"/g)];
-      const thumbs=matches.map(m=>m[1]).slice(0,9);
-      if(thumbs.length>=3){T.albumPhotoSrcs=thumbs;renderAlbumGrid(thumbs);return;}
-    }
-    throw new Error('no photos');
-  }catch{renderAlbumPlaceholders();}
+function openPhotoUrlInput(){
+  let modal=document.getElementById('photo-url-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='photo-url-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(30,20,80,.45);z-index:400;display:flex;align-items:flex-end;justify-content:center;';
+    modal.innerHTML=`
+      <div style="background:#FDFBFF;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:16px;font-weight:700;color:#26215C;">Import photos</div>
+          <button onclick="document.getElementById('photo-url-modal').remove()" style="background:none;border:none;font-size:22px;color:#AFA9EC;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <div style="background:#F7F5FF;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#534AB7;line-height:1.8;">
+          <strong>How to get a photo URL:</strong><br>
+          <strong>Mobile:</strong> Open Google Photos → open a photo → tap ⋮ → Share → Copy link<br>
+          <strong>Desktop:</strong> Open photo → right-click → Copy image address<br>
+          Paste up to 9 URLs, one per line.
+        </div>
+        <label class="form-lbl" style="margin-top:0;">Photo URLs (one per line)</label>
+        <textarea id="photo-urls-input" rows="9" placeholder="https://lh3.googleusercontent.com/...
+https://photos.app.goo.gl/...
+(paste more here)" style="font-size:11px;font-family:monospace;line-height:1.6;"></textarea>
+        <button class="primary-btn" style="margin-top:12px;" onclick="importPhotoUrls()">Save photos</button>
+      </div>`;
+    document.getElementById('app').appendChild(modal);
+  }
+  const ta=document.getElementById('photo-urls-input');
+  if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length)ta.value=T.albumPhotoSrcs.join('\n');
+  modal.style.display='flex';
+}
+
+function importPhotoUrls(){
+  const ta=document.getElementById('photo-urls-input');
+  if(!ta)return;
+  const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
+  if(!urls.length){toast('Paste at least one image URL');return;}
+  T.albumPhotoSrcs=urls;
+  document.getElementById('photo-url-modal').remove();
+  renderAlbumPreview();
+  const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(urls);
+  markDirty();toast(urls.length+' photo'+(urls.length>1?'s':'')+' imported! 📸');
+}
+
+function fetchAlbumPhotos(){
+  renderAlbumGrid(T.albumPhotoSrcs||[]);
 }
 
 function renderAlbumGrid(srcs){
   ['album-preview-grid','wrap-album-grid'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+    if(!srcs||!srcs.length){
+      el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 16px;color:#AFA9EC;font-size:12px;line-height:1.6;">No photos yet.<br>Tap "+ Add photos" to import from your album.</div>';
+      return;
+    }
     srcs.slice(0,9).forEach(src=>{
-      const item=document.createElement('div');item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;';
-      const img=document.createElement('img');img.src=src;img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
-      img.onerror=()=>{item.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">📷</div>';};
-      item.appendChild(img);item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');el.appendChild(item);
+      const item=document.createElement('div');
+      item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;';
+      const img=document.createElement('img');
+      img.src=src;img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+      img.onerror=()=>{
+        item.style.cssText+='display:flex;align-items:center;justify-content:center;font-size:22px;';
+        item.innerHTML='📷';
+      };
+      item.appendChild(img);
+      item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');
+      el.appendChild(item);
     });
   });
 }
+
 function renderAlbumPlaceholders(){
-  ['album-preview-grid','wrap-album-grid'].forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;el.innerHTML='';
-    ALBUM_PLACEHOLDERS.forEach(p=>{
-      const item=document.createElement('div');item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;gap:2px;';
-      item.innerHTML=p.emoji+'<span style="font-size:8px;color:#534AB7;font-weight:500;text-align:center;">'+p.label+'</span>';
-      item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');el.appendChild(item);
-    });
-  });
+  const el=document.getElementById('wrap-album-grid');if(!el)return;
+  if(T.albumPhotoSrcs&&T.albumPhotoSrcs.length)renderAlbumGrid(T.albumPhotoSrcs);
+  else el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:#AFA9EC;font-size:12px;">No photos imported yet</div>';
 }
 
 // ── GAMES ──────────────────────────────────────────────────────────
@@ -1669,7 +1747,7 @@ function renderBingo(){
   });
   el.appendChild(g);
 }
-function saveBingo(){const v=(document.getElementById('new-bingo')||{value:''}).value.trim();if(!v)return;T.bingo.push({t:v,d:false,by:null});document.getElementById('new-bingo').value='';toggleForm('bingo-form');renderBingo();toast('Square added!');}
+function saveBingo(){const v=(document.getElementById('new-bingo')||{value:''}).value.trim();if(!v)return;T.bingo.push({t:v,d:false,by:null});document.getElementById('new-bingo').value='';toggleForm('bingo-form');renderBingo();markDirty();toast('Square added!');}
 function shuffleDare(){const el=document.getElementById('dare-text');if(!T.dares.length){if(el)el.textContent='Add some dares first!';return;}const d=T.dares[Math.floor(Math.random()*T.dares.length)];if(el)el.textContent=d;}
 function renderDareList(){
   const el=document.getElementById('dare-list-all');if(!el)return;el.innerHTML='';
@@ -1682,7 +1760,7 @@ function renderDareList(){
     btn.onclick=()=>{T.dares.splice(i,1);renderDareList();toast('Dare removed');};row.appendChild(btn);el.appendChild(row);
   });
 }
-function saveNewDare(){const v=(document.getElementById('new-dare')||{value:''}).value.trim();if(!v)return;T.dares.push(v);document.getElementById('new-dare').value='';toggleForm('dare-add-form');renderDareList();toast('Dare added!');}
+function saveNewDare(){const v=(document.getElementById('new-dare')||{value:''}).value.trim();if(!v)return;T.dares.push(v);document.getElementById('new-dare').value='';toggleForm('dare-add-form');renderDareList();markDirty();toast('Dare added!');}
 function renderPC(){
   const el=document.getElementById('photo-challenges');if(!el)return;el.innerHTML='';
   const done=T.photoChallenge.filter(c=>c.done).length;
@@ -1698,7 +1776,7 @@ function renderPC(){
     el.appendChild(row);
   });
 }
-function savePC(){const v=(document.getElementById('new-pc')||{value:''}).value.trim();if(!v)return;T.photoChallenge.push({text:v,done:false,by:null});document.getElementById('new-pc').value='';toggleForm('pc-form');renderPC();toast('Challenge added!');}
+function savePC(){const v=(document.getElementById('new-pc')||{value:''}).value.trim();if(!v)return;T.photoChallenge.push({text:v,done:false,by:null});document.getElementById('new-pc').value='';toggleForm('pc-form');renderPC();markDirty();toast('Challenge added!');}
 
 // ── PACKING ────────────────────────────────────────────────────────
 function refreshPack(){
@@ -1725,7 +1803,7 @@ function renderPack(){
   });
 }
 function togglePack(i){if(!T.pack[i].ticked)T.pack[i].ticked={};T.pack[i].ticked[selCrew.key]=!T.pack[i].ticked[selCrew.key];renderPack();if(T.pack[i].ticked[selCrew.key])toast(selCrew.name+' packed this ✓');}
-function savePackItem(){const v=(document.getElementById('new-pack-item')||{value:''}).value.trim();if(!v)return;T.pack.push({text:v,ticked:{}});document.getElementById('new-pack-item').value='';toggleForm('pack-form');renderPack();toast('Item added!');}
+function savePackItem(){const v=(document.getElementById('new-pack-item')||{value:''}).value.trim();if(!v)return;T.pack.push({text:v,ticked:{}});document.getElementById('new-pack-item').value='';toggleForm('pack-form');renderPack();markDirty();toast('Item added!');}
 
 // ── SOUNDTRACK ─────────────────────────────────────────────────────
 function parseSongFromUrl(url){
@@ -1781,24 +1859,150 @@ function saveSong(){
   ['new-song-url','new-song-name-override'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const pr=document.getElementById('song-link-preview');if(pr)pr.style.display='none';
   toggleForm('song-form');
+  markDirty();
   toast(T.spotifyCreated?'Added! Tap "Update playlist" to sync 🎵':'Added to soundtrack!');
   renderSongs();
 }
 function openSongModal(i){editSongIdx=i;document.getElementById('edit-song-memory').value=T.songs[i].memory||'';document.getElementById('song-edit-modal').style.display='flex';}
 function closeSongModal(){document.getElementById('song-edit-modal').style.display='none';editSongIdx=-1;}
 function saveSongMemory(){if(editSongIdx<0)return;T.songs[editSongIdx].memory=document.getElementById('edit-song-memory').value.trim();closeSongModal();renderSongs();toast('Memory saved!');}
+// ── SPOTIFY ────────────────────────────────────────────────────────
+// Strategy: use Spotify PKCE OAuth (no backend needed) to create a real
+// playlist. Falls back to opening tracks in app if user hasn't connected.
+//
+// To enable real playlist creation, register a free Spotify Developer app at
+// developer.spotify.com → create an App → add the redirect URI of this page.
+// Then replace SPOTIFY_CLIENT_ID below with your Client ID.
+const SPOTIFY_CLIENT_ID=''; // <-- paste your Spotify Client ID here
+const SPOTIFY_REDIRECT=window.location.href.split('?')[0].split('#')[0];
+const SPOTIFY_SCOPE='playlist-modify-public playlist-modify-private';
+
+let spotifyAccessToken=null;
+let spotifyUserId=null;
+
+// Check for OAuth callback on page load
+function checkSpotifyCallback(){
+  const hash=window.location.hash;
+  if(!hash)return;
+  // PKCE uses query params after redirect
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code||state!=='ws_spotify')return;
+  window.history.replaceState({},'',window.location.pathname);
+  exchangeSpotifyCode(code);
+}
+async function exchangeSpotifyCode(code){
+  const verifier=sessionStorage.getItem('spotify_verifier');
+  if(!verifier){toast('Spotify auth error — try again');return;}
+  try{
+    const res=await fetch('https://accounts.spotify.com/api/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({client_id:SPOTIFY_CLIENT_ID,grant_type:'authorization_code',code,redirect_uri:SPOTIFY_REDIRECT,code_verifier:verifier}),
+    });
+    const data=await res.json();
+    if(data.access_token){
+      spotifyAccessToken=data.access_token;
+      sessionStorage.setItem('spotify_token',data.access_token);
+      toast('Spotify connected! Creating playlist… 🎵');
+      await doCreatePlaylist();
+    }
+  }catch(e){toast('Spotify connection failed');}
+}
+async function startSpotifyAuth(){
+  if(!SPOTIFY_CLIENT_ID){
+    // No client ID set — fall back to opening tracks directly
+    openAllInSpotify(getTrackIds());
+    return;
+  }
+  // Generate PKCE challenge
+  const verifier=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  sessionStorage.setItem('spotify_verifier',verifier);
+  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
+  const challenge=btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  const url=`https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT)}&scope=${encodeURIComponent(SPOTIFY_SCOPE)}&state=ws_spotify&code_challenge_method=S256&code_challenge=${challenge}`;
+  window.location.href=url;
+}
+function getTrackIds(){
+  return T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
+}
+async function doCreatePlaylist(){
+  const token=spotifyAccessToken||sessionStorage.getItem('spotify_token');
+  if(!token){await startSpotifyAuth();return;}
+  try{
+    // Get user ID
+    if(!spotifyUserId){
+      const me=await fetch('https://api.spotify.com/v1/me',{headers:{Authorization:'Bearer '+token}});
+      const meData=await me.json();
+      if(meData.error){spotifyAccessToken=null;sessionStorage.removeItem('spotify_token');await startSpotifyAuth();return;}
+      spotifyUserId=meData.id;
+    }
+    // Create playlist
+    const ids=getTrackIds();
+    const pl=await fetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`,{
+      method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({name:'Window Seat — '+T.name,description:'Created with Window Seat 🚗',public:false}),
+    });
+    const plData=await pl.json();
+    if(!plData.id){toast('Could not create playlist');return;}
+    T.spotifyPlaylistId=plData.id;
+    T.spotifyPlaylistUrl=plData.external_urls.spotify;
+    // Add tracks
+    if(ids.length){
+      await fetch(`https://api.spotify.com/v1/playlists/${plData.id}/tracks`,{
+        method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({uris:ids.map(id=>'spotify:track:'+id)}),
+      });
+    }
+    T.spotifyCreated=true;T.spotifyTrackIds=[...ids];
+    renderSongs();
+    toast('Playlist created! '+ids.length+' tracks added 🎵');
+  }catch(e){toast('Spotify error — try again');}
+}
+async function doUpdatePlaylist(){
+  const token=spotifyAccessToken||sessionStorage.getItem('spotify_token');
+  if(!token||!T.spotifyPlaylistId){createSpotifyPlaylist();return;}
+  try{
+    const ids=getTrackIds();
+    await fetch(`https://api.spotify.com/v1/playlists/${T.spotifyPlaylistId}/tracks`,{
+      method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({uris:ids.map(id=>'spotify:track:'+id)}),
+    });
+    T.spotifyTrackIds=[...ids];
+    renderSongs();
+    toast('Playlist updated! '+ids.length+' tracks 🎵');
+    if(T.spotifyPlaylistUrl)window.open(T.spotifyPlaylistUrl,'_blank');
+  }catch(e){toast('Update failed — reconnecting…');spotifyAccessToken=null;sessionStorage.removeItem('spotify_token');createSpotifyPlaylist();}
+}
 function openAllInSpotify(ids){
   if(!ids.length){window.open('https://open.spotify.com','_blank');return;}
-  ids.forEach((id,i)=>{if(i===0||i===ids.length-1){setTimeout(()=>{const a=document.createElement('a');a.href=i===0?`spotify:track:${id}`:`https://open.spotify.com/track/${id}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();},i*250);}});
+  // spotify:trackset opens a queue of tracks in the app on mobile
+  const tracksetUri='spotify:trackset:Window Seat:'+ids.join(',');
+  const a=document.createElement('a');a.href=tracksetUri;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();a.remove();
+  // Fallback for desktop: open first track in web player after short delay
+  setTimeout(()=>{if(ids[0])window.open('https://open.spotify.com/track/'+ids[0],'_blank');},800);
   toast('Opening Spotify with '+ids.length+' track'+(ids.length>1?'s':'')+' 🎵');
 }
 function createSpotifyPlaylist(){
-  const ids=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
-  T.spotifyCreated=true;T.spotifyTrackIds=[...ids];renderSongs();openAllInSpotify(ids);
+  const token=spotifyAccessToken||sessionStorage.getItem('spotify_token');
+  if(SPOTIFY_CLIENT_ID&&token){doCreatePlaylist();}
+  else if(SPOTIFY_CLIENT_ID){toast('Connecting to Spotify…');startSpotifyAuth();}
+  else{
+    // No client ID — open tracks directly in Spotify app
+    const ids=getTrackIds();
+    T.spotifyCreated=true;T.spotifyTrackIds=[...ids];renderSongs();
+    openAllInSpotify(ids);
+  }
 }
 function updateSpotifyPlaylist(){
-  const ids=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
-  T.spotifyTrackIds=[...ids];renderSongs();openAllInSpotify(ids);
+  const ids=getTrackIds();
+  if(T.spotifyPlaylistId){doUpdatePlaylist();}
+  else{
+    T.spotifyTrackIds=[...ids];renderSongs();
+    openAllInSpotify(ids);
+  }
 }
 
 // ── EXPENSES ───────────────────────────────────────────────────────
@@ -1850,7 +2054,7 @@ function renderExpenses(){
     const col=net>0?'#0F6E56':'#993556';
     const txt=net>0?`${c.name} owes you ₹${Math.round(net)}`:`You owe ${c.name} ₹${Math.round(-net)}`;
     const sb=document.createElement('button');sb.className='small-btn save-btn';sb.style.cssText='padding:4px 8px;font-size:10px;flex-shrink:0;';sb.textContent='✓ Done';
-    sb.onclick=()=>{if(!T.settledPairs.includes(pk))T.settledPairs.push(pk);renderExpenses();toast('Settled with '+c.name+' ✓');};
+    sb.onclick=()=>{if(!T.settledPairs.includes(pk))T.settledPairs.push(pk);renderExpenses();markDirty();toast('Settled with '+c.name+' ✓');};
     row.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(c,24)}</div><div style="flex:1;font-size:13px;color:${col};font-weight:500;">${txt}</div>`;
     row.appendChild(sb);bEl.appendChild(row);
   });
@@ -1875,7 +2079,7 @@ function saveExp(){
   T.expenses.push({desc,amount:amt,payer:selPayer.key,split:[...splitKeys]});
   ['new-exp-desc','new-exp-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const p=document.getElementById('exp-amt-preview');if(p)p.textContent='';
-  toggleForm('exp-form');renderExpenses();renderSplitBtns();toast('Expense added!');
+  toggleForm('exp-form');renderExpenses();renderSplitBtns();markDirty();toast('Expense added!');
 }
 
 // ── CREW ───────────────────────────────────────────────────────────
@@ -1932,7 +2136,7 @@ function renderCrewCards(){
   renderHomeCrew();
 }
 function startCrewEdit(k){CREW.forEach(x=>x._editing=false);const c=CREW.find(x=>x.key===k);if(c){c._editing=true;renderCrewCards();setTimeout(()=>{const i=document.getElementById('en-'+k);if(i)i.focus();},50);}}
-function saveCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){const n=document.getElementById('en-'+k),s=document.getElementById('es-'+k);if(n&&n.value.trim())c.name=n.value.trim();if(s)c.status=s.value.trim();c._editing=false;renderCrewCards();renderSplash();toast('Profile updated!');}}
+function saveCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){const n=document.getElementById('en-'+k),s=document.getElementById('es-'+k);if(n&&n.value.trim())c.name=n.value.trim();if(s)c.status=s.value.trim();c._editing=false;renderCrewCards();renderSplash();markDirty();toast('Profile updated!');}}
 function cancelCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){c._editing=false;renderCrewCards();}}
 
 // ── WRAP ───────────────────────────────────────────────────────────
@@ -2025,13 +2229,175 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);}
+
+// ── PERSISTENCE ────────────────────────────────────────────────────
+// Everything lives in localStorage under 'ws_state'.
+// Structure: { trips: [...], activeId: string, selCrewKey: string }
+// The seed trip is always present as a baseline; saved data is merged on top.
+
+const LS_KEY='ws_state';
+let _dirty=false; // tracks if anything changed since last save
+
+function saveState(){
+  if(!_dirty)return;
+  try{
+    // Strip non-serialisable properties (_editing flags are fine, functions aren't)
+    const payload={
+      trips:TRIPS,
+      activeId:T?T.id:null,
+      selCrewKey:selCrew?selCrew.key:null,
+    };
+    localStorage.setItem(LS_KEY,JSON.stringify(payload));
+    _dirty=false;
+  }catch(e){
+    // localStorage can be full (5MB limit) — silently ignore
+    console.warn('Window Seat: could not save state',e);
+  }
+}
+
+function markDirty(){_dirty=true;}
+
+// Auto-save every 3 seconds if anything changed
+setInterval(saveState,3000);
+
+// Also save on page hide/unload (covers tab close, home button, etc.)
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveState();});
+window.addEventListener('pagehide',saveState);
+window.addEventListener('beforeunload',saveState);
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return false;
+    const saved=JSON.parse(raw);
+    if(!saved||!Array.isArray(saved.trips)||!saved.trips.length)return false;
+
+    // Rebuild TRIPS from saved data.
+    // For the seed trip: merge saved data ON TOP of fresh seed defaults
+    // so any new fields added to the seed in future still appear.
+    const freshSeed=TRIPS[0]; // the pre-built seed trip object
+    const restoredTrips=saved.trips.map(savedTrip=>{
+      if(savedTrip.id===SEED_ID){
+        // Deep merge: saved data wins for every field that exists in saved,
+        // fresh seed provides defaults for any new fields
+        return Object.assign({},freshSeed,savedTrip);
+      }
+      // For user-created trips, rebuild via makeTripData so defaults are applied
+      return makeTripData(savedTrip);
+    });
+
+    // Make sure seed trip is always present even if saved.trips doesn't have it
+    if(!restoredTrips.find(t=>t.id===SEED_ID))restoredTrips.unshift(freshSeed);
+
+    TRIPS.length=0;
+    restoredTrips.forEach(t=>TRIPS.push(t));
+
+    return {activeId:saved.activeId,selCrewKey:saved.selCrewKey};
+  }catch(e){
+    console.warn('Window Seat: could not load state',e);
+    return false;
+  }
+}
+
+// goTo — navigates screens and marks state dirty for non-UI screens
+function goTo(id){
+  _goTo(id);
+  if(id!=='s-app-home'&&id!=='s-splash'&&id!=='s-create-trip')markDirty();
+}
+
+// enterTrip — renders all trip data into screens then navigates home
+function enterTrip(){
+  _enterTrip();
+  if(T&&selCrew)T._myCrewKey=selCrew.key;
+  markDirty();saveState();
+}
 
 // ── INIT ───────────────────────────────────────────────────────────
 requestNotifPermission();
+checkSpotifyCallback();
+
+// 1. Try to restore saved state
+const restored=loadState();
+
+// 2. Check for invite link (may override routing)
 checkInviteParam();
-renderAppHome();
-goTo('s-app-home');
+
+// 3. Route to the right screen
+if(pendingInvite){
+  // Invite link takes priority — show app home with the invite banner
+  renderAppHome();
+  goTo('s-app-home');
+}else if(restored&&restored.activeId){
+  // We have a previously active trip and crew — go straight to the trip home
+  const trip=TRIPS.find(t=>t.id===restored.activeId);
+  if(trip){
+    activateTrip(trip);
+    const key=restored.selCrewKey||trip._myCrewKey;
+    selCrew=(key&&CREW.find(c=>c.key===key))||CREW[0]||selCrew;
+    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+    renderAppHome(); // keep app home warm in the background
+    // Render all trip screens then jump directly to trip home
+    const av=document.getElementById('home-av');if(av)av.innerHTML=svgAv(selCrew,36);
+    const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
+    const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=T.from+' → '+T.to+(T.dateStart?' · '+T.dateStart:'');
+    rebuildCatSelect();
+    renderHomeCrew();updateCountdown();renderStops();
+    renderHighlights();renderAlbumPreview();
+    renderBingo();renderDareList();renderPC();
+    refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
+    renderSongs();renderCrewCards();renderWrap();
+    const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
+    const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
+    _goTo('s-home'); // bypass dirty-marking wrapper — we save explicitly above
+  }else{
+    renderAppHome();_goTo('s-app-home');
+  }
+}else{
+  // First launch — show app home
+  renderAppHome();
+  _goTo('s-app-home');
+}
+
+// Start periodic save ticker
+_dirty=false;
+
+// ── SERVICE WORKER (offline + installability) ──────────────────────
+// Injected as a blob — no separate sw.js file needed.
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='window-seat-v1';
+self.addEventListener('install',e=>{
+  e.waitUntil(
+    caches.open(CACHE).then(c=>c.add(self.location.href.split('?')[0]))
+      .then(()=>self.skipWaiting())
+  );
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const url=e.request.url;
+  if(url.includes('accounts.spotify.com')||url.includes('api.spotify.com')||url.includes('allorigins.win'))return;
+  e.respondWith(
+    caches.match(e.request).then(cached=>{
+      const live=fetch(e.request).then(res=>{
+        if(res.ok){const c=res.clone();caches.open(CACHE).then(cache=>cache.put(e.request,c));}
+        return res;
+      }).catch(()=>cached);
+      return cached||live;
+    })
+  );
+});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
+    .catch(()=>{}); // silently skip on file:// or unsupported
+}
 </script>
 </body>
 </html>
