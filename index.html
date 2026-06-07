@@ -847,10 +847,7 @@ let TRIPS=[makeTripData({
     'Cheth\'s coffee order — most complicated ever',
     '90s playlist at full volume on the highway',
   ],
-  songs:[
-    {name:'Dil Se Re — A.R. Rahman',url:'https://open.spotify.com/track/example1',platform:'spotify',who:'cheth',memory:'Played as we left Bengaluru'},
-    {name:'Kabhi Kabhi Aditi — Jaane Tu',url:'https://open.spotify.com/track/example2',platform:'spotify',who:'sherbet',memory:'Sunrise on the highway'},
-  ],
+  songs:[],
   stops:[
     {name:'Sri Guru Residency, Sanjayanagara',sub:'Sherbet sets off',url:'https://maps.app.goo.gl/Ra7mRZNEV1Lkz1Gg7',status:'done',cat:'pickup',open:false},
     {name:'Malleshwaram (Maruti Arena)',sub:'Sherbet picks up Neens',url:'https://maps.app.goo.gl/Z7bC4QwfeqEM1bNLA',status:'done',cat:'pickup',open:false},
@@ -1952,6 +1949,8 @@ function importPhotoUrls(){
   const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
   if(!urls.length){toast('Paste at least one image link');return;}
   T.albumPhotoSrcs=urls;
+  T.albumSetupDone=true;
+  if(!T.albumUrl)T.albumUrl=urls[0];
   document.getElementById('photo-url-modal').remove();
   renderAlbumPreview();
   const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
