@@ -982,12 +982,56 @@ function renderGoogleAuthUI(){
   }
 }
 
+// Store what the user was trying to do before redirect so we can resume
+function _savePendingJoin(tripId,crewKey){
+  try{sessionStorage.setItem('ws_pending_join',JSON.stringify({tripId,crewKey}));}catch(e){}
+}
+function _loadPendingJoin(){
+  try{const r=sessionStorage.getItem('ws_pending_join');sessionStorage.removeItem('ws_pending_join');return r?JSON.parse(r):null;}catch(e){return null;}
+}
+
 async function fbSignInGoogle(){
+  // Try popup first (works on desktop); fall back to redirect on mobile
   try{
     await _fbAuth.signInWithPopup(_googleProvider);
   }catch(e){
-    if(e.code!=='auth/popup-closed-by-user')toast('Sign-in failed — try again');
-    throw e;
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-cancelled'){
+      // Redirect flow — page will reload after sign-in
+      await _fbAuth.signInWithRedirect(_googleProvider);
+    }else if(e.code!=='auth/popup-closed-by-user'){
+      toast('Sign-in failed — try again');
+      throw e;
+    }else{
+      throw e;
+    }
+  }
+}
+
+// Handle redirect result on page load (called during init)
+async function _handleAuthRedirect(){
+  try{
+    const result=await _fbAuth.getRedirectResult();
+    if(!result||!result.user)return;
+    // Resume whatever action was pending before the redirect
+    const pending=_loadPendingJoin();
+    if(pending){
+      const trip=TRIPS.find(t=>t.id===pending.tripId);
+      if(trip){
+        const member=trip.crew.find(c=>c.key===pending.crewKey);
+        if(member){
+          member.googleUid=result.user.uid;
+          trip._myCrewKey=pending.crewKey;
+          activateTrip(trip);
+          selCrew=member;selPayer=member;
+          fbSaveTrip(trip);
+          renderAppHome();
+          toast('Welcome aboard! 🎉');
+          enterTrip();
+        }
+      }
+    }
+  }catch(e){
+    if(e.code!=='auth/no-current-user')console.warn('Redirect auth error',e);
   }
 }
 
@@ -1284,7 +1328,9 @@ async function acceptInvitePick(){
   if(!pendingInvite||!invPickedKey){toast('Pick your avatar first');return;}
   if(!_currentUser){
     toast('Signing in with Google…');
-    try{await fbSignInGoogle();}catch(e){return;}
+    // Save pending join so redirect flow can resume after sign-in
+    _savePendingJoin(pendingInvite.trip.id, invPickedKey);
+    try{await fbSignInGoogle();}catch(e){_loadPendingJoin();return;} // clear on cancel
   }
   document.getElementById('invite-modal').classList.remove('open');
   const jb=document.getElementById('invite-join-btn');
@@ -2470,6 +2516,7 @@ function enterTrip(){
 // ── INIT ───────────────────────────────────────────────────────────
 requestNotifPermission();
 checkSpotifyCallback();
+_handleAuthRedirect(); // resume any post-redirect join action
 
 // 1. Try to restore saved state
 const restored=loadState();
