@@ -29,7 +29,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <!-- Firebase init — must run before the app script -->
 <script>
@@ -44,7 +43,6 @@ const _fbApp=firebase.initializeApp({
 });
 const _fbDb=firebase.database();
 const _fbAuth=firebase.auth();
-const _fbStorage=firebase.storage();
 const _googleProvider=new firebase.auth.GoogleAuthProvider();
 </script>
 
@@ -1929,80 +1927,32 @@ function openPhotoUrlInput(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(30,20,80,.45);z-index:400;display:flex;align-items:flex-end;justify-content:center;';
   modal.innerHTML=`
     <div style="background:#FDFBFF;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div style="font-size:16px;font-weight:700;color:#26215C;">Add photos</div>
         <button onclick="document.getElementById('photo-url-modal').remove()" style="background:none;border:none;font-size:22px;color:#AFA9EC;cursor:pointer;line-height:1;">×</button>
       </div>
-      <div id="photo-upload-progress" style="display:none;background:#F3F0FE;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#534AB7;text-align:center;"></div>
-      <button onclick="triggerPhotoFilePicker()" style="width:100%;padding:16px;border-radius:14px;border:2px dashed #CECBF6;background:#F7F5FF;color:#534AB7;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Choose from camera / gallery
-      </button>
-      <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none;" onchange="uploadPhotosFromFiles(this.files)"/>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="flex:1;height:1px;background:#EEEDFE;"></div>
-        <div style="font-size:11px;color:#AFA9EC;">or paste URLs</div>
-        <div style="flex:1;height:1px;background:#EEEDFE;"></div>
+      <div style="background:#F7F5FF;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#534AB7;line-height:1.8;">
+        <strong>How to get a photo link:</strong><br>
+        <strong>Google Photos:</strong> Open photo → ⋮ → Share → Copy link<br>
+        <strong>iCloud:</strong> Open photo → Share → Copy iCloud Link<br>
+        <strong>Any image:</strong> Long-press → Copy image link<br>
+        Paste up to 9 links, one per line.
       </div>
-      <textarea id="photo-urls-input" rows="4" placeholder="https://lh3.googleusercontent.com/...&#10;(one URL per line)" style="font-size:11px;font-family:monospace;line-height:1.6;"></textarea>
-      <button class="primary-btn" style="margin-top:10px;" onclick="importPhotoUrls()">Save URLs</button>
+      <label class="form-lbl" style="margin-top:0;">Photo links (one per line)</label>
+      <textarea id="photo-urls-input" rows="6" placeholder="https://lh3.googleusercontent.com/...&#10;https://icloud.com/photos/...&#10;(paste more here)" style="font-size:11px;font-family:monospace;line-height:1.6;"></textarea>
+      <button class="primary-btn" style="margin-top:12px;" onclick="importPhotoUrls()">Save photos</button>
     </div>`;
   document.getElementById('app').appendChild(modal);
   const ta=document.getElementById('photo-urls-input');
-  if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length){
-    // Only pre-fill URLs that aren't Firebase Storage URLs (those are managed separately)
-    const nonStorageUrls=T.albumPhotoSrcs.filter(u=>!u.includes('firebasestorage'));
-    if(nonStorageUrls.length)ta.value=nonStorageUrls.join('\n');
-  }
-}
-
-function triggerPhotoFilePicker(){
-  document.getElementById('photo-file-input').click();
-}
-
-async function uploadPhotosFromFiles(files){
-  if(!files||!files.length)return;
-  const MAX=9-(T.albumPhotoSrcs||[]).length;
-  if(MAX<=0){toast('Album is full (max 9 photos)');return;}
-  const toUpload=Array.from(files).slice(0,MAX);
-  const prog=document.getElementById('photo-upload-progress');
-  if(prog){prog.style.display='block';prog.textContent=`Uploading 0 / ${toUpload.length}…`;}
-
-  const newUrls=[];
-  for(let i=0;i<toUpload.length;i++){
-    const file=toUpload[i];
-    const ext=file.name.split('.').pop()||'jpg';
-    const path=`trips/${T.id}/photos/${Date.now()}_${i}.${ext}`;
-    const ref=_fbStorage.ref(path);
-    try{
-      await ref.put(file);
-      const url=await ref.getDownloadURL();
-      newUrls.push(url);
-      if(prog)prog.textContent=`Uploading ${i+1} / ${toUpload.length}…`;
-    }catch(e){
-      console.warn('Upload failed',e);
-      toast('Upload failed — check Storage rules');
-    }
-  }
-
-  if(newUrls.length){
-    T.albumPhotoSrcs=[...(T.albumPhotoSrcs||[]),...newUrls];
-    markDirty();
-    const modal=document.getElementById('photo-url-modal');if(modal)modal.remove();
-    renderAlbumPreview();
-    const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
-    toast(`${newUrls.length} photo${newUrls.length>1?'s':''} uploaded! 📸`);
-  }
+  if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length)ta.value=T.albumPhotoSrcs.join('\n');
 }
 
 function importPhotoUrls(){
   const ta=document.getElementById('photo-urls-input');
   if(!ta)return;
   const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
-  if(!urls.length){toast('Paste at least one image URL');return;}
-  // Merge with any existing Storage URLs
-  const storageUrls=(T.albumPhotoSrcs||[]).filter(u=>u.includes('firebasestorage'));
-  T.albumPhotoSrcs=[...storageUrls,...urls].slice(0,9);
+  if(!urls.length){toast('Paste at least one image link');return;}
+  T.albumPhotoSrcs=urls;
   document.getElementById('photo-url-modal').remove();
   renderAlbumPreview();
   const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
@@ -2725,9 +2675,8 @@ self.addEventListener('fetch',e=>{
   const url=e.request.url;
   if(url.includes('accounts.spotify.com')||url.includes('api.spotify.com')||
      url.includes('allorigins.win')||url.includes('firebaseapp.com')||
-     url.includes('firebasedatabase.app')||url.includes('firebasestorage')||
-     url.includes('googleapis.com')||url.includes('accounts.google.com')||
-     url.includes('firebase.google.com'))return;
+     url.includes('firebasedatabase.app')||url.includes('googleapis.com')||
+     url.includes('accounts.google.com')||url.includes('firebase.google.com'))return;
   e.respondWith(
     caches.match(e.request).then(cached=>{
       const live=fetch(e.request).then(res=>{
