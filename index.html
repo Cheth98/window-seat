@@ -809,7 +809,7 @@ function makeTripData(o){
     stops:[],
     highlights:[],
     songs:[],
-    pack:[{text:'ID / Aadhaar',ticked:{}},{text:'Phone charger',ticked:{}},{text:'Sunscreen',ticked:{}},{text:'Snacks',ticked:{}},{text:'Medicines',ticked:{}}],
+    pack:[],
     expenses:[],
     settledPairs:[],  // array of 'keyA_keyB' strings
     notifications:[],
@@ -842,11 +842,7 @@ let TRIPS=[makeTripData({
     {key:'neens',name:'Neens',color:'#185FA5',bg:'#E6F1FB',prop:'mic',status:'',_editing:false},
     {key:'sherbet',name:'Sherbet',color:'#854F0B',bg:'#FAEEDA',prop:'pencil',status:'',_editing:false},
   ],
-  highlights:[
-    'Spotted colourful birds at Ranganathittu!',
-    'Cheth\'s coffee order — most complicated ever',
-    '90s playlist at full volume on the highway',
-  ],
+  highlights:[],
   songs:[],
   stops:[
     {name:'Sri Guru Residency, Sanjayanagara',sub:'Sherbet sets off',url:'https://maps.app.goo.gl/Ra7mRZNEV1Lkz1Gg7',status:'done',cat:'pickup',open:false},
@@ -856,12 +852,7 @@ let TRIPS=[makeTripData({
     {name:'Ranganathittu Bird Sanctuary',sub:'Scenic pitstop',url:'https://maps.app.goo.gl/8zCEP1sWFiqAvvpz6',status:'upcoming',cat:'nature',open:false},
     {name:'The Windflower Resorts, Mysuru',sub:'Home for the night',url:'https://maps.app.goo.gl/jN7yWXDjuyKo4LCt9',status:'upcoming',cat:'stay',open:false},
   ],
-  pack:[
-    {text:'ID / Aadhaar',ticked:{}},{text:'Phone charger',ticked:{}},
-    {text:'Sunscreen',ticked:{}},{text:'Snacks',ticked:{}},
-    {text:'Aux / Bluetooth cable',ticked:{}},{text:'Extra cash',ticked:{}},
-    {text:'Medicines',ticked:{}},{text:'Camera',ticked:{}},
-  ],
+  pack:[],
   catMeta:{
     pickup:{label:'Pickup',color:'#EEEDFE',text:'#534AB7',dot:'#7F77DD'},
     breakfast:{label:'Breakfast',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
@@ -1648,12 +1639,8 @@ function launchNewTrip(){
     dist:'',inviteToken:'ws'+Math.random().toString(36).substr(2,8).toUpperCase(),
     crew:[creator],
   });
-  // Sign in with Google to link the creator's account
-  if(!_currentUser){
-    fbSignInGoogle().catch(()=>{});// non-blocking — trip still creates
-  }else{
-    creator.googleUid=_currentUser.uid;
-  }
+  // Link Google account if already signed in (no forced sign-in popup for creator)
+  if(_currentUser){creator.googleUid=_currentUser.uid;}
   TRIPS.push(newTrip);
   renderAppHome();
   // Activate the trip and set selCrew to the creator
@@ -1943,19 +1930,39 @@ function openPhotoUrlInput(){
   if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length)ta.value=T.albumPhotoSrcs.join('\n');
 }
 
+function _extractOgImage(html){
+  if(!html)return null;
+  const pats=[
+    /property="og:image"\s+content="([^"]+)"/,
+    /content="([^"]+)"\s+property="og:image"/,
+    /"og:image","([^"]+)"/,
+    /content="(https:\/\/lh3\.googleusercontent\.com[^"]+)"/,
+    /src="(https:\/\/lh3\.googleusercontent\.com[^"]+)"/,
+  ];
+  for(const p of pats){
+    const m=html.match(p);
+    if(m&&m[1]&&m[1].startsWith('http'))return m[1].replace(/&amp;/g,'&');
+  }
+  return null;
+}
+
 async function resolvePhotoUrl(url){
-  // Already a direct image — no need to resolve
   if(!url.includes('photos.app.goo.gl')&&!url.includes('photos.google.com'))return url;
+  // Try corsproxy.io first (returns raw HTML, follows redirects)
   try{
-    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-    const res=await fetch(proxy);
-    const data=await res.json();
-    // Extract og:image from the page HTML — Google Photos always has one
-    const match=data.contents.match(/(?:property="og:image"|name="og:image")\s+content="([^"]+)"/)||
-                data.contents.match(/content="([^"]+)"\s+property="og:image"/);
-    if(match&&match[1])return match[1].replace(/&amp;/g,'&');
+    const ac1=new AbortController();const t1=setTimeout(()=>ac1.abort(),8000);
+    const r1=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),{signal:ac1.signal});
+    clearTimeout(t1);
+    if(r1.ok){const html=await r1.text();const found=_extractOgImage(html);if(found)return found;}
   }catch(e){}
-  return url; // fallback to original if anything fails
+  // Try allorigins (JSON-wrapped response)
+  try{
+    const ac2=new AbortController();const t2=setTimeout(()=>ac2.abort(),8000);
+    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),{signal:ac2.signal});
+    clearTimeout(t2);
+    if(r2.ok){const d=await r2.json();const found=_extractOgImage(d.contents||'');if(found)return found;}
+  }catch(e){}
+  return null; // null signals failure to caller
 }
 
 async function importPhotoUrls(){
@@ -1964,11 +1971,14 @@ async function importPhotoUrls(){
   const rawUrls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
   if(!rawUrls.length){toast('Paste at least one image link');return;}
 
-  // Show resolving state inside the modal
   const btn=document.querySelector('#photo-url-modal .primary-btn');
   if(btn){btn.textContent='Resolving…';btn.disabled=true;}
 
-  const urls=await Promise.all(rawUrls.map(resolvePhotoUrl));
+  const resolved=await Promise.all(rawUrls.map(resolvePhotoUrl));
+
+  // Keep only resolved URLs; fall back to raw URL if resolution failed
+  const urls=resolved.map((u,i)=>u||rawUrls[i]);
+  const failed=resolved.filter(u=>u===null).length;
 
   T.albumPhotoSrcs=urls;
   T.albumSetupDone=true;
@@ -1976,11 +1986,25 @@ async function importPhotoUrls(){
   document.getElementById('photo-url-modal').remove();
   renderAlbumPreview();
   const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
-  markDirty();toast(urls.length+' photo'+(urls.length>1?'s':'')+' saved! 📸');
+  markDirty();
+  if(failed>0){
+    toast(urls.length+' photo'+(urls.length>1?'s':'')+' saved ('+failed+' may not preview — try a direct image URL)');
+  }else{
+    toast(urls.length+' photo'+(urls.length>1?'s':'')+' saved! 📸');
+  }
 }
 
 function fetchAlbumPhotos(){
   renderAlbumGrid(T.albumPhotoSrcs||[]);
+}
+
+function removePhoto(idx){
+  if(!T.albumPhotoSrcs)return;
+  T.albumPhotoSrcs.splice(idx,1);
+  if(!T.albumPhotoSrcs.length)T.albumSetupDone=false;
+  renderAlbumPreview();
+  const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
+  markDirty();
 }
 
 function renderAlbumGrid(srcs){
@@ -1990,9 +2014,9 @@ function renderAlbumGrid(srcs){
       el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 16px;color:#AFA9EC;font-size:12px;line-height:1.6;">No photos yet.<br>Tap "+ Add photos" to import from your album.</div>';
       return;
     }
-    srcs.slice(0,9).forEach(src=>{
+    srcs.slice(0,9).forEach((src,idx)=>{
       const item=document.createElement('div');
-      item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;';
+      item.style.cssText='border-radius:8px;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#D8D4FA;position:relative;';
       const img=document.createElement('img');
       img.src=src;img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
       img.onerror=()=>{
@@ -2001,6 +2025,14 @@ function renderAlbumGrid(srcs){
       };
       item.appendChild(img);
       item.onclick=()=>window.open(T.albumUrl||SEED_ALBUM_URL,'_blank');
+      // Remove button (only shown on the full grid, not the preview)
+      if(id==='wrap-album-grid'){
+        const rmBtn=document.createElement('button');
+        rmBtn.textContent='×';
+        rmBtn.style.cssText='position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;padding:0;';
+        rmBtn.onclick=(e)=>{e.stopPropagation();removePhoto(idx);};
+        item.appendChild(rmBtn);
+      }
       el.appendChild(item);
     });
   });
