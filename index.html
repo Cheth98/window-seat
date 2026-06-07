@@ -2598,9 +2598,13 @@ function loadState(){
     const freshSeed=TRIPS[0]; // the pre-built seed trip object
     const restoredTrips=saved.trips.map(savedTrip=>{
       if(savedTrip.id===SEED_ID){
-        // Deep merge: saved data wins for every field that exists in saved,
-        // fresh seed provides defaults for any new fields
-        return Object.assign({},freshSeed,savedTrip);
+        // Merge saved state (stops ticked, bingo, etc.) on top of fresh seed,
+        // but always reset highlights & pack to the fresh seed values so
+        // removing defaults takes effect even for returning users.
+        const merged=Object.assign({},freshSeed,savedTrip);
+        merged.highlights=freshSeed.highlights;
+        merged.pack=freshSeed.pack;
+        return merged;
       }
       // For user-created trips, rebuild via makeTripData so defaults are applied
       return makeTripData(savedTrip);
