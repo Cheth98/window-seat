@@ -25,6 +25,24 @@
 <!-- Apple touch icon (used when added to home screen on iOS) -->
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%2326215C'/><rect x='56' y='210' width='400' height='162' rx='32' fill='%237F77DD'/><rect x='96' y='112' width='224' height='114' rx='28' fill='%23534AB7'/><rect x='112' y='128' width='88' height='76' rx='14' fill='%23B5D4F4'/><rect x='212' y='128' width='88' height='76' rx='14' fill='%23FAC775'/><circle cx='152' cy='372' r='44' fill='%2326215C'/><circle cx='152' cy='372' r='22' fill='%23EEEDFE'/><circle cx='360' cy='372' r='44' fill='%2326215C'/><circle cx='360' cy='372' r='22' fill='%23EEEDFE'/></svg>"/>
 
+<!-- Firebase SDK (compat — works without a bundler) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Firebase init — must run before the app script -->
+<script>
+const _fbApp=firebase.initializeApp({
+  apiKey:"AIzaSyBzbkN9eNybpF5nM57aRKM4t-jQ73EPlnM",
+  authDomain:"window-seat-eae71.firebaseapp.com",
+  databaseURL:"https://window-seat-eae71-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"window-seat-eae71",
+  storageBucket:"window-seat-eae71.firebasestorage.app",
+  messagingSenderId:"856660060883",
+  appId:"1:856660060883:web:36d63c1286c4cffdb48226"
+});
+const _fbDb=firebase.database();
+</script>
+
 <!-- PWA Manifest injected inline as a blob — works from any origin including file:// -->
 <script>
 (function(){
@@ -885,6 +903,47 @@ function activateTrip(trip){
   T=trip;CREW=T.crew;
   selCrew=CREW[0]||{key:'',name:'',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
   selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+  fbListenToTrip(trip.id);
+}
+
+// ── FIREBASE REAL-TIME SYNC ────────────────────────────────────────
+let _fbListenTripId=null,_fbListenerRef=null,_fbListenerHandler=null;
+
+function fbListenToTrip(tripId){
+  if(tripId===SEED_ID)return; // seed trip is local-only
+  if(tripId===_fbListenTripId)return; // already subscribed
+  // Unsubscribe previous listener
+  if(_fbListenerRef&&_fbListenerHandler){
+    _fbListenerRef.off('value',_fbListenerHandler);
+    _fbListenerRef=null;_fbListenerHandler=null;
+  }
+  _fbListenTripId=tripId;
+  const ref=_fbDb.ref('trips/'+tripId);
+  _fbListenerRef=ref;
+  _fbListenerHandler=ref.on('value',snap=>{
+    const remote=snap.val();
+    if(!remote)return;
+    const idx=TRIPS.findIndex(t=>t.id===tripId);
+    if(idx<0){TRIPS.push(makeTripData(remote));renderAppHome();return;}
+    // Merge remote on top of local defaults so new fields always have values
+    TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
+    if(T&&T.id===tripId){
+      T=TRIPS[idx];CREW=T.crew;
+      // Re-render all live screens with fresh data
+      renderStops();renderHighlights();renderAlbumPreview();
+      renderHomeCrew();renderCrewCards();renderExpenses();
+      renderExpPayerBtns();renderSplitBtns();renderSongs();
+      renderWrap();renderBingo();renderDareList();renderPC();
+      refreshPack();renderNotifFeed();
+      const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
+    }
+    renderAppHome();
+  });
+}
+
+function fbSaveTrip(trip){
+  if(!trip||trip.id===SEED_ID)return;
+  _fbDb.ref('trips/'+trip.id).set(trip).catch(e=>console.warn('Firebase save error',e));
 }
 
 function cName(key){return(CREW.find(c=>c.key===key)||{name:key}).name;}
@@ -1051,12 +1110,20 @@ function checkInviteParam(){
     const d=JSON.parse(atob(raw));
     const trip=TRIPS.find(t=>t.id===d.tid&&t.inviteToken===d.token);
     if(!trip){
-      // Trip not found locally — create a lightweight placeholder so user sees the invite
-      // In a real app the server would return trip details; here we show what's in the token
-      pendingInvite={trip:null,data:d};
-      // Show a simple toast since we can't render a card without the trip object
-      toast('Invite link received — trip not found on this device');
+      // Trip not found locally — fetch from Firebase RTDB using the tripId in the token
       window.history.replaceState({},'',window.location.pathname);
+      _fbDb.ref('trips/'+d.tid).get().then(snap=>{
+        const fbTrip=snap.val();
+        if(fbTrip&&fbTrip.inviteToken===d.token){
+          const loaded=makeTripData(fbTrip);
+          if(!TRIPS.find(t=>t.id===loaded.id))TRIPS.push(loaded);
+          pendingInvite={trip:loaded};
+          renderAppHome();
+          _goTo('s-app-home');
+        }else{
+          toast('Invite link is invalid or has expired');
+        }
+      }).catch(()=>toast('Could not load trip — check your connection'));
       return;
     }
     // Store as pending — app home will render the invite banner
@@ -1218,6 +1285,7 @@ function acceptInviteCreate(){
   activateTrip(trip);
   selCrew=newMember;selPayer=newMember;
   pendingInvite=null;
+  fbSaveTrip(trip); // push new crew member to Firebase immediately
   renderAppHome();
   toast('Welcome to '+trip.name+'! 🎉');
   enterTrip();
@@ -1416,6 +1484,8 @@ function launchNewTrip(){
   // Activate the trip and set selCrew to the creator
   activateTrip(newTrip);
   selCrew=creator;selPayer=creator;
+  // Immediately persist new trip to Firebase so invite links work at once
+  markDirty();saveState();
   // Show a post-creation invite prompt before entering the trip
   openPostCreateInvite(newTrip);
 }
@@ -2242,18 +2312,14 @@ let _dirty=false; // tracks if anything changed since last save
 function saveState(){
   if(!_dirty)return;
   try{
-    // Strip non-serialisable properties (_editing flags are fine, functions aren't)
-    const payload={
-      trips:TRIPS,
-      activeId:T?T.id:null,
-      selCrewKey:selCrew?selCrew.key:null,
-    };
+    const payload={trips:TRIPS,activeId:T?T.id:null,selCrewKey:selCrew?selCrew.key:null};
     localStorage.setItem(LS_KEY,JSON.stringify(payload));
     _dirty=false;
   }catch(e){
-    // localStorage can be full (5MB limit) — silently ignore
     console.warn('Window Seat: could not save state',e);
   }
+  // Push active trip to Firebase (non-seed trips only)
+  if(T&&T.id!==SEED_ID)fbSaveTrip(T);
 }
 
 function markDirty(){_dirty=true;}

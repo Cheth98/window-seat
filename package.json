@@ -1,0 +1,13 @@
+{
+  "name": "window-seat",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "predeploy": "echo 'Deploying Window Seat to GitHub Pages...'",
+    "deploy": "npx gh-pages -d . --dotfiles --message 'Deploy [skip ci]'"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0"
+  }
+}

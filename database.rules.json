@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "trips": {
+      "$tripId": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['id', 'name', 'inviteToken'])"
+      }
+    }
+  }
+}
