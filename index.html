@@ -28,6 +28,7 @@
 <!-- Firebase SDK (compat — works without a bundler) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <!-- Firebase init — must run before the app script -->
 <script>
@@ -41,6 +42,8 @@ const _fbApp=firebase.initializeApp({
   appId:"1:856660060883:web:36d63c1286c4cffdb48226"
 });
 const _fbDb=firebase.database();
+const _fbAuth=firebase.auth();
+const _googleProvider=new firebase.auth.GoogleAuthProvider();
 </script>
 
 <!-- PWA Manifest injected inline as a blob — works from any origin including file:// -->
@@ -217,6 +220,7 @@ textarea{min-height:64px;}
       Window Seat — made with ✨ for every road trip
     </div>
   </div>
+  <div id="google-auth-bar" style="border-top:1px solid #EEEDFE;"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -778,12 +782,16 @@ function takenCombos(crew,excludeKey){
   });
   return s;
 }
+// Trips the user has explicitly declined — persisted across sessions
+const _DECLINED_TRIPS=new Set(JSON.parse(localStorage.getItem('ws_declined')||'[]'));
+function _saveDeclined(){try{localStorage.setItem('ws_declined',JSON.stringify([..._DECLINED_TRIPS]));}catch(e){}}
+
 // Every field a trip needs, all isolated inside the trip object.
 function makeTripData(o){
   return Object.assign({
     id:'',name:'',emoji:'🚗',from:'',to:'',dateStart:'',dateEnd:'',
     dist:'',inviteToken:'',
-    crew:[],          // [{key,name,color,bg,prop,status,_editing}]
+    crew:[],          // [{key,name,color,bg,prop,status,googleUid,_editing}]
     stops:[],
     highlights:[],
     songs:[],
@@ -945,6 +953,47 @@ function fbListenToTrip(tripId){
 function fbSaveTrip(trip){
   if(!trip||trip.id===SEED_ID)return;
   _fbDb.ref('trips/'+trip.id).set(trip).catch(e=>console.warn('Firebase save error',e));
+}
+
+// ── GOOGLE AUTH ────────────────────────────────────────────────────
+let _currentUser=null;
+
+_fbAuth.onAuthStateChanged(user=>{
+  _currentUser=user;
+  // When auth state resolves, auto-identify the user's crew member
+  if(user&&T&&T.id!==SEED_ID){
+    const match=CREW.find(c=>c.googleUid===user.uid);
+    if(match){selCrew=match;selPayer=match;}
+  }
+  renderGoogleAuthUI();
+});
+
+function renderGoogleAuthUI(){
+  const el=document.getElementById('google-auth-bar');
+  if(!el)return;
+  if(_currentUser){
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:#534AB7;">
+      <img src="${_currentUser.photoURL||''}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
+      <span style="flex:1;">${_currentUser.displayName||_currentUser.email}</span>
+      <button onclick="fbSignOut()" style="background:none;border:none;cursor:pointer;font-size:11px;color:#AFA9EC;padding:2px 6px;border-radius:6px;border:1px solid #EEEDFE;">Sign out</button>
+    </div>`;
+  }else{
+    el.innerHTML='';
+  }
+}
+
+async function fbSignInGoogle(){
+  try{
+    await _fbAuth.signInWithPopup(_googleProvider);
+  }catch(e){
+    if(e.code!=='auth/popup-closed-by-user')toast('Sign-in failed — try again');
+    throw e;
+  }
+}
+
+async function fbSignOut(){
+  await _fbAuth.signOut();
+  toast('Signed out');
 }
 
 function cName(key){return(CREW.find(c=>c.key===key)||{name:key}).name;}
@@ -1120,6 +1169,7 @@ function checkInviteParam(){
         const fbTrip=snap.val();
         if(fbTrip&&fbTrip.inviteToken===d.token){
           const loaded=makeTripData(fbTrip);
+          if(_DECLINED_TRIPS.has(loaded.id)){toast('You previously declined this invite — use a fresh link to rejoin');return;}
           if(!TRIPS.find(t=>t.id===loaded.id))TRIPS.push(loaded);
           pendingInvite={trip:loaded};
           renderAppHome();
@@ -1163,6 +1213,16 @@ function acceptPendingInvite(){
 }
 
 function declinePendingInvite(){
+  if(pendingInvite&&pendingInvite.trip){
+    const tid=pendingInvite.trip.id;
+    // Remove from local TRIPS so it doesn't show up again (seed stays)
+    if(tid!==SEED_ID){
+      const idx=TRIPS.findIndex(t=>t.id===tid);
+      if(idx>=0)TRIPS.splice(idx,1);
+      _DECLINED_TRIPS.add(tid);
+      _saveDeclined();
+    }
+  }
   pendingInvite=null;
   renderAppHome();
   toast('Invite declined');
@@ -1220,17 +1280,25 @@ function renderInviteCrewPick(trip){
   });
   document.getElementById('invite-pick-confirm').style.display='none';
 }
-function acceptInvitePick(){
+async function acceptInvitePick(){
   if(!pendingInvite||!invPickedKey){toast('Pick your avatar first');return;}
+  if(!_currentUser){
+    toast('Signing in with Google…');
+    try{await fbSignInGoogle();}catch(e){return;}
+  }
   document.getElementById('invite-modal').classList.remove('open');
   const jb=document.getElementById('invite-join-btn');
   if(jb){jb.style.background='#CECBF6';jb.style.cursor='default';}
   const trip=pendingInvite.trip;
+  // Link Google account to this avatar slot
+  const member=trip.crew.find(c=>c.key===invPickedKey);
+  if(member)member.googleUid=_currentUser.uid;
   trip._myCrewKey=invPickedKey;
   activateTrip(trip);
   selCrew=CREW.find(c=>c.key===invPickedKey)||CREW[0];
   selPayer=selCrew;
   pendingInvite=null;invPickedKey=null;
+  fbSaveTrip(trip);
   renderAppHome();
   toast('Welcome aboard! 🎉');
   enterTrip();
@@ -1272,24 +1340,28 @@ function updateInvitePreview(){
   const c=AV_COLORS[invColorIdx];
   el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">${svgAv({key:'_inv',name,bg:c.bg,color:c.text,prop:invProp},64)}<div style="font-size:15px;font-weight:600;color:#3C3489;">${name}</div></div>`;
 }
-function acceptInviteCreate(){
+async function acceptInviteCreate(){
   if(!pendingInvite)return;
   const name=(document.getElementById('invite-name')||{value:''}).value.trim();
   if(!name){toast('Enter your name to join');return;}
   if(isComboTaken(pendingInvite.trip.crew,invProp,invColorIdx,'')){
     toast('That prop + colour combo is taken — pick a different one');return;
   }
+  // Require Google sign-in before joining
+  if(!_currentUser){
+    toast('Signing in with Google…');
+    try{await fbSignInGoogle();}catch(e){return;}
+  }
   const c=AV_COLORS[invColorIdx];
-  const newMember={key:'u'+Date.now(),name,color:c.text,bg:c.bg,prop:invProp,status:'',_editing:false};
+  const newMember={key:'u'+Date.now(),name,color:c.text,bg:c.bg,prop:invProp,status:'',googleUid:_currentUser.uid,_editing:false};
   pendingInvite.trip.crew.push(newMember);
-  // Store which crew member this user is
   pendingInvite.trip._myCrewKey=newMember.key;
   document.getElementById('invite-modal').classList.remove('open');
   const trip=pendingInvite.trip;
   activateTrip(trip);
   selCrew=newMember;selPayer=newMember;
   pendingInvite=null;
-  fbSaveTrip(trip); // push new crew member to Firebase immediately
+  fbSaveTrip(trip);
   renderAppHome();
   toast('Welcome to '+trip.name+'! 🎉');
   enterTrip();
@@ -1483,6 +1555,12 @@ function launchNewTrip(){
     dist:'',inviteToken:'ws'+Math.random().toString(36).substr(2,8).toUpperCase(),
     crew:[creator],
   });
+  // Sign in with Google to link the creator's account
+  if(!_currentUser){
+    fbSignInGoogle().catch(()=>{});// non-blocking — trip still creates
+  }else{
+    creator.googleUid=_currentUser.uid;
+  }
   TRIPS.push(newTrip);
   renderAppHome();
   // Activate the trip and set selCrew to the creator
@@ -2326,7 +2404,13 @@ function saveState(){
   if(T&&T.id!==SEED_ID)fbSaveTrip(T);
 }
 
-function markDirty(){_dirty=true;}
+let _fbWriteTimer=null;
+function markDirty(){
+  _dirty=true;
+  // Write to Firebase within 400ms so other users see changes in real time
+  clearTimeout(_fbWriteTimer);
+  _fbWriteTimer=setTimeout(()=>{if(T&&T.id!==SEED_ID)fbSaveTrip(T);},400);
+}
 
 // Auto-save every 3 seconds if anything changed
 setInterval(saveState,3000);
