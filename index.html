@@ -422,7 +422,7 @@ textarea{min-height:64px;}
 <!-- HOME -->
 <div class="screen" id="s-home">
   <div style="background:linear-gradient(160deg,#EEEDFE 0%,#E1F5EE 60%,#FAEEDA 100%);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 16px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid #CECBF6;">
-    <div id="home-av" style="width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #AFA9EC;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+    <div id="home-av" onclick="goTo('s-profile')" style="width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #AFA9EC;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Edit your profile"></div>
     <div style="flex:1;min-width:0;overflow:hidden;">
       <div style="font-size:15px;font-weight:700;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
@@ -702,6 +702,50 @@ textarea{min-height:64px;}
     <div id="crew-cards"></div>
     <p class="sec-lbl">Trip vibe</p>
     <div style="background:#F7F5FF;border-radius:12px;padding:14px;border:1px solid #EEEDFE;"><textarea id="vibe-text" style="background:transparent;border:none;font-size:14px;color:#3C3489;line-height:1.7;width:100%;resize:none;min-height:44px;padding:0;box-shadow:none;" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">The kind of trip you'll still talk about in 10 years.</textarea></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen" id="s-profile">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <span class="topbar-title">My profile</span>
+    <div style="width:34px;"></div>
+  </div>
+  <div class="scroll">
+    <div id="profile-hero" style="display:flex;flex-direction:column;align-items:center;padding:28px 16px 20px;gap:12px;">
+      <div id="profile-av-big" style="width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;"></div>
+      <div style="text-align:center;">
+        <div id="profile-name-display" style="font-size:22px;font-weight:700;color:#26215C;margin-bottom:4px;"></div>
+        <div id="profile-status-display" style="font-size:14px;color:#7F77DD;font-style:italic;"></div>
+      </div>
+    </div>
+
+    <div style="margin:0 0 18px;">
+      <p class="sec-lbl" style="margin-top:0;">Trip identity</p>
+      <div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="form-lbl" style="margin-top:0;">Display name</label>
+          <input type="text" id="profile-name-input" placeholder="Your name" style="margin-top:4px;"/>
+        </div>
+        <div>
+          <label class="form-lbl">Status</label>
+          <input type="text" id="profile-status-input" placeholder='e.g. "ready to adventure 🚀"' style="margin-top:4px;"/>
+        </div>
+        <button class="primary-btn" onclick="saveProfileEdit()" style="margin-top:4px;">Save changes</button>
+      </div>
+    </div>
+
+    <p class="sec-lbl">Google account</p>
+    <div id="profile-google-card" style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:16px;"></div>
+
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -2497,22 +2541,74 @@ function renderCrewCards(){
   const el=document.getElementById('crew-cards');if(!el)return;el.innerHTML='';
   CREW.forEach(c=>{
     const isMe=c.key===selCrew.key;
-    const card=document.createElement('div');card.className='crew-card';card.style.borderTop='3px solid '+c.bg;
-    if(isMe&&c._editing){
-      card.innerHTML=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div><div><div style="font-size:15px;font-weight:600;color:#3C3489;">${c.name}</div><span class="pill p-purple" style="font-size:10px;">You</span></div></div>
-        <label class="form-lbl" style="margin-top:0;">Your name</label><input type="text" id="en-${c.key}" value="${c.name}"/>
-        <label class="form-lbl">Status</label><input type="text" id="es-${c.key}" value="${c.status||''}" placeholder='e.g. "ready to adventure"'/>
-        <div style="display:flex;gap:8px;margin-top:12px;"><button class="small-btn save-btn" style="flex:1;justify-content:center;" onclick="saveCrewEdit('${c.key}')">✓ Save</button><button class="del-btn" onclick="cancelCrewEdit('${c.key}')">✕</button></div>`;
-    }else{
-      card.innerHTML=`<div style="display:flex;align-items:center;gap:12px;"><div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><div style="font-size:16px;font-weight:600;color:#3C3489;">${c.name}</div>${isMe?'<span class="pill p-purple" style="font-size:10px;">You</span>':''}</div><div style="font-size:13px;color:${c.status?c.color:'#CECBF6'};font-style:${c.status?'normal':'italic'};">${c.status||'no status yet'}</div></div>${isMe?`<button class="small-btn edit-btn" onclick="startCrewEdit('${c.key}')">✏ Edit</button>`:''}</div>`;
-    }
+    const card=document.createElement('div');card.className='crew-card';
+    card.style.cssText=`border-top:3px solid ${c.bg};${isMe?'cursor:pointer;':''}`; 
+    card.innerHTML=`<div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <div style="font-size:16px;font-weight:600;color:#3C3489;">${c.name}</div>
+          ${isMe?'<span class="pill p-purple" style="font-size:10px;">You</span>':''}
+        </div>
+        <div style="font-size:13px;color:${c.status?c.color:'#CECBF6'};font-style:${c.status?'normal':'italic'};">${c.status||'no status yet'}</div>
+      </div>
+      ${isMe?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AFA9EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>':''}
+    </div>`;
+    if(isMe)card.onclick=()=>goTo('s-profile');
     el.appendChild(card);
   });
   renderHomeCrew();
 }
-function startCrewEdit(k){CREW.forEach(x=>x._editing=false);const c=CREW.find(x=>x.key===k);if(c){c._editing=true;renderCrewCards();setTimeout(()=>{const i=document.getElementById('en-'+k);if(i)i.focus();},50);}}
-function saveCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){const n=document.getElementById('en-'+k),s=document.getElementById('es-'+k);if(n&&n.value.trim())c.name=n.value.trim();if(s)c.status=s.value.trim();c._editing=false;renderCrewCards();renderSplash();markDirty();toast('Profile updated!');}}
-function cancelCrewEdit(k){const c=CREW.find(x=>x.key===k);if(c){c._editing=false;renderCrewCards();}}
+
+// ── PROFILE ────────────────────────────────────────────────────────
+function renderProfile(){
+  if(!selCrew)return;
+  const c=selCrew;
+  // Hero avatar
+  const avEl=document.getElementById('profile-av-big');
+  if(avEl){
+    avEl.style.cssText=`width:88px;height:88px;border-radius:50%;background:${c.bg};border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px ${c.bg};`;
+    avEl.innerHTML=svgAv(c,68);
+  }
+  const nd=document.getElementById('profile-name-display');if(nd)nd.textContent=c.name;
+  const sd=document.getElementById('profile-status-display');
+  if(sd){sd.textContent=c.status||'No status set';sd.style.color=c.status?c.color:'#CECBF6';}
+  // Pre-fill inputs
+  const ni=document.getElementById('profile-name-input');if(ni)ni.value=c.name;
+  const si=document.getElementById('profile-status-input');if(si)si.value=c.status||'';
+  // Google card
+  const gc=document.getElementById('profile-google-card');
+  if(gc){
+    if(_currentUser){
+      gc.innerHTML=`<div style="display:flex;align-items:center;gap:12px;">
+        <img src="${_currentUser.photoURL||''}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #EEEDFE;" onerror="this.style.display='none'"/>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_currentUser.displayName||'Google user'}</div>
+          <div style="font-size:12px;color:#AFA9EC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_currentUser.email||''}</div>
+        </div>
+        <button onclick="fbSignOut()" style="background:#FBEAF0;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#993556;padding:7px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0;">Sign out</button>
+      </div>`;
+    }else{
+      gc.innerHTML=`<div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>
+        <div style="flex:1;"><div style="font-size:13px;color:#AFA9EC;">Not signed in</div><div style="font-size:12px;color:#CECBF6;">Sign in to sync with your crew</div></div>
+        <button onclick="fbSignInGoogle()" style="background:#534AB7;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#fff;padding:7px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0;">Sign in</button>
+      </div>`;
+    }
+  }
+}
+function saveProfileEdit(){
+  if(!selCrew)return;
+  const ni=document.getElementById('profile-name-input');
+  const si=document.getElementById('profile-status-input');
+  if(ni&&ni.value.trim())selCrew.name=ni.value.trim();
+  if(si)selCrew.status=si.value.trim();
+  renderProfile();
+  renderCrewCards();renderSplash();
+  const av=document.getElementById('home-av');if(av)av.innerHTML=svgAv(selCrew,36);
+  markDirty();
+  toast('Profile updated! ✓');
+}
 
 // ── WRAP ───────────────────────────────────────────────────────────
 function renderWrap(){
@@ -2604,7 +2700,7 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();}
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
 // Everything lives in localStorage under 'ws_state'.
