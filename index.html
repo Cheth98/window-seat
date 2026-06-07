@@ -845,9 +845,9 @@ let TRIPS=[makeTripData({
   highlights:[],
   songs:[],
   stops:[
-    {name:'Sri Guru Residency, Sanjayanagara',sub:'Sherbet sets off',url:'https://maps.app.goo.gl/Ra7mRZNEV1Lkz1Gg7',status:'done',cat:'pickup',open:false},
-    {name:'Malleshwaram (Maruti Arena)',sub:'Sherbet picks up Neens',url:'https://maps.app.goo.gl/Z7bC4QwfeqEM1bNLA',status:'done',cat:'pickup',open:false},
-    {name:'Basaveshwar Nagar',sub:"Partial crew assembles at Cheth's",url:'https://maps.app.goo.gl/dhdKQFSSQ4U23FmR7',status:'here',cat:'pickup',open:false},
+    {name:'Sri Guru Residency, Sanjayanagara',sub:'Sherbet sets off',url:'https://maps.app.goo.gl/Ra7mRZNEV1Lkz1Gg7',status:'upcoming',cat:'pickup',open:false},
+    {name:'Malleshwaram (Maruti Arena)',sub:'Sherbet picks up Neens',url:'https://maps.app.goo.gl/Z7bC4QwFeqEM1bNLA',status:'upcoming',cat:'pickup',open:false},
+    {name:'Basaveshwar Nagar',sub:"Partial crew assembles at Cheth's",url:'https://maps.app.goo.gl/dhdKQFSSQ4U23FmR7',status:'upcoming',cat:'pickup',open:false},
     {name:'Kadamba Veg, Bidadi',sub:'Breakfast — Saxi joins here!',url:'https://maps.app.goo.gl/puHAfZGURxputSKQ9',status:'upcoming',cat:'breakfast',open:false},
     {name:'Ranganathittu Bird Sanctuary',sub:'Scenic pitstop',url:'https://maps.app.goo.gl/8zCEP1sWFiqAvvpz6',status:'upcoming',cat:'nature',open:false},
     {name:'The Windflower Resorts, Mysuru',sub:'Home for the night',url:'https://maps.app.goo.gl/jN7yWXDjuyKo4LCt9',status:'upcoming',cat:'stay',open:false},
@@ -885,9 +885,9 @@ let TRIPS=[makeTripData({
   photoChallenge:[
     {text:'All four in the rear view mirror',done:false,by:null},
     {text:'First petrol station stop selfie',done:false,by:null},
-    {text:'Someone asleep in the back seat',done:true,by:'cheth'},
+    {text:'Someone asleep in the back seat',done:false,by:null},
     {text:'The highway stretching ahead',done:false,by:null},
-    {text:'Your order at the breakfast stop',done:true,by:'saxi'},
+    {text:'Your order at the breakfast stop',done:false,by:null},
     {text:'A bird at Ranganathittu',done:false,by:null},
   ],
 })];
@@ -2604,6 +2604,8 @@ function loadState(){
         const merged=Object.assign({},freshSeed,savedTrip);
         merged.highlights=freshSeed.highlights;
         merged.pack=freshSeed.pack;
+        merged.photoChallenge=freshSeed.photoChallenge;
+        merged.stops=freshSeed.stops;
         return merged;
       }
       // For user-created trips, rebuild via makeTripData so defaults are applied
