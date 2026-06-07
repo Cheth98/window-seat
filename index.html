@@ -936,18 +936,19 @@ function fbListenToTrip(tripId){
     if(!remote)return;
     const idx=TRIPS.findIndex(t=>t.id===tripId);
     if(idx<0){TRIPS.push(makeTripData(remote));renderAppHome();return;}
+    // Check raw Firebase value BEFORE merge — makeTripData default sets _dataV:2
+    // which would make the post-merge check always pass even on old Firebase data
+    const needsMigration=(remote._dataV||0)<2;
     // Merge remote on top of local defaults so new fields always have values
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
     // ── Data migration v2: clear default songs that shipped with the app ──
-    // Runs once: if _dataV is missing/old, wipe songs & write back to Firebase.
-    if((TRIPS[idx]._dataV||0)<2){
+    if(needsMigration){
       TRIPS[idx].songs=[];
       TRIPS[idx].spotifyCreated=false;
       TRIPS[idx].spotifyTrackIds=[];
       TRIPS[idx].spotifyPlaylistId=null;
       TRIPS[idx].spotifyPlaylistUrl=null;
       TRIPS[idx]._dataV=2;
-      // Push the migrated state back so every device sees it immediately
       _fbDb.ref('trips/'+tripId).set(TRIPS[idx]).catch(()=>{});
     }
     if(T&&T.id===tripId){
