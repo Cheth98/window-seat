@@ -922,7 +922,6 @@ function activateTrip(trip){
 let _fbListenTripId=null,_fbListenerRef=null,_fbListenerHandler=null;
 
 function fbListenToTrip(tripId){
-  if(tripId===SEED_ID)return; // seed trip is local-only
   if(tripId===_fbListenTripId)return; // already subscribed
   // Unsubscribe previous listener
   if(_fbListenerRef&&_fbListenerHandler){
@@ -941,6 +940,8 @@ function fbListenToTrip(tripId){
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
     if(T&&T.id===tripId){
       T=TRIPS[idx];CREW=T.crew;
+      // Re-sync selCrew/selPayer to refreshed CREW objects (old refs are now stale)
+      if(selCrew){const r=CREW.find(c=>c.key===selCrew.key);if(r){selCrew=r;selPayer=r;}}
       // Re-render all live screens with fresh data
       renderStops();renderHighlights();renderAlbumPreview();
       renderHomeCrew();renderCrewCards();renderExpenses();
@@ -969,7 +970,7 @@ function _showSync(state){
 }
 
 function fbSaveTrip(trip){
-  if(!trip||trip.id===SEED_ID)return;
+  if(!trip)return;
   _showSync('syncing');
   _fbDb.ref('trips/'+trip.id).set(trip)
     .then(()=>_showSync('saved'))
@@ -977,7 +978,7 @@ function fbSaveTrip(trip){
 }
 
 // Online/offline detection
-window.addEventListener('online', ()=>{if(T&&T.id!==SEED_ID)fbSaveTrip(T);});
+window.addEventListener('online', ()=>{if(T)fbSaveTrip(T);});
 window.addEventListener('offline',()=>_showSync('offline'));
 
 // ── IDENTITY CHIP ──────────────────────────────────────────────────
@@ -994,7 +995,7 @@ let _currentUser=null;
 _fbAuth.onAuthStateChanged(user=>{
   _currentUser=user;
   // When auth state resolves, auto-identify the user's crew member
-  if(user&&T&&T.id!==SEED_ID){
+  if(user&&T){
     const match=CREW.find(c=>c.googleUid===user.uid);
     if(match){selCrew=match;selPayer=match;renderYouAreChip();}
   }
@@ -2610,7 +2611,7 @@ function saveState(){
     console.warn('Window Seat: could not save state',e);
   }
   // Push active trip to Firebase (non-seed trips only)
-  if(T&&T.id!==SEED_ID)fbSaveTrip(T);
+  if(T)fbSaveTrip(T);
 }
 
 let _fbWriteTimer=null;
@@ -2618,7 +2619,7 @@ function markDirty(){
   _dirty=true;
   // Write to Firebase within 400ms so other users see changes in real time
   clearTimeout(_fbWriteTimer);
-  _fbWriteTimer=setTimeout(()=>{if(T&&T.id!==SEED_ID)fbSaveTrip(T);},400);
+  _fbWriteTimer=setTimeout(()=>{if(T)fbSaveTrip(T);},400);
 }
 
 // Auto-save every 3 seconds if anything changed
@@ -2646,10 +2647,10 @@ function loadState(){
         // but always reset highlights & pack to the fresh seed values so
         // removing defaults takes effect even for returning users.
         const merged=Object.assign({},freshSeed,savedTrip);
+        // Reset highlights and pack to fresh (empty) — Firebase will provide real data if synced
         merged.highlights=freshSeed.highlights;
         merged.pack=freshSeed.pack;
-        merged.photoChallenge=freshSeed.photoChallenge;
-        merged.stops=freshSeed.stops;
+        // photoChallenge and stops: keep localStorage/Firebase state (don't reset on every load)
         return merged;
       }
       // For user-created trips, rebuild via makeTripData so defaults are applied
