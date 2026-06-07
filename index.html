@@ -2138,9 +2138,7 @@ function saveSongMemory(){if(editSongIdx<0)return;T.songs[editSongIdx].memory=do
 // developer.spotify.com → create an App → add the redirect URI of this page.
 // Then replace SPOTIFY_CLIENT_ID below with your Client ID.
 const SPOTIFY_CLIENT_ID='e9dfa37c386c4343bf1ff9fea3bc7306';
-const SPOTIFY_REDIRECT=window.location.hostname==='localhost'
-  ?'http://localhost:3000/'
-  :'https://cheth98.github.io/window-seat';
+const SPOTIFY_REDIRECT='https://cheth98.github.io/window-seat';
 const SPOTIFY_SCOPE='playlist-modify-public playlist-modify-private';
 
 let spotifyAccessToken=null;
