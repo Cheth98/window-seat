@@ -824,7 +824,7 @@ function makeTripData(o){
       food:{label:'Food',color:'#E1F5EE',text:'#0F6E56',dot:'#1D9E75'},
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
-    spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],
+    spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],_dataV:2,
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -938,6 +938,18 @@ function fbListenToTrip(tripId){
     if(idx<0){TRIPS.push(makeTripData(remote));renderAppHome();return;}
     // Merge remote on top of local defaults so new fields always have values
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
+    // ── Data migration v2: clear default songs that shipped with the app ──
+    // Runs once: if _dataV is missing/old, wipe songs & write back to Firebase.
+    if((TRIPS[idx]._dataV||0)<2){
+      TRIPS[idx].songs=[];
+      TRIPS[idx].spotifyCreated=false;
+      TRIPS[idx].spotifyTrackIds=[];
+      TRIPS[idx].spotifyPlaylistId=null;
+      TRIPS[idx].spotifyPlaylistUrl=null;
+      TRIPS[idx]._dataV=2;
+      // Push the migrated state back so every device sees it immediately
+      _fbDb.ref('trips/'+tripId).set(TRIPS[idx]).catch(()=>{});
+    }
     if(T&&T.id===tripId){
       T=TRIPS[idx];CREW=T.crew;
       // Re-sync selCrew/selPayer to refreshed CREW objects (old refs are now stale)
