@@ -2686,17 +2686,25 @@ window.addEventListener('popstate',e=>{
 // When the iOS/Android keyboard opens, visualViewport shrinks but
 // window.innerHeight stays the same. Translate the fixed bnav up
 // by the keyboard height so it never sits behind the keyboard.
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',()=>{
-    const bnav=document.querySelector('.bnav');if(!bnav)return;
-    const kb=window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop;
-    if(kb>80){
-      bnav.style.transform=`translateX(-50%) translateY(-${Math.round(kb)}px)`;
-    }else{
-      bnav.style.transform='translateX(-50%)';
-    }
-  });
+function _syncBnavToViewport(){
+  const bnav=document.querySelector('.bnav');if(!bnav)return;
+  if(!window.visualViewport){bnav.style.transform='translateX(-50%)';return;}
+  const kb=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+  if(kb>80){
+    bnav.style.transform=`translateX(-50%) translateY(-${Math.round(kb)}px)`;
+  }else{
+    bnav.style.transform='translateX(-50%)';
+  }
 }
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',_syncBnavToViewport);
+  window.visualViewport.addEventListener('scroll',_syncBnavToViewport);
+}
+// Belt-and-suspenders: force reset whenever any input/textarea loses focus
+document.addEventListener('focusout',()=>{
+  // Keyboard is about to close — reset after a short delay to let viewport settle
+  setTimeout(_syncBnavToViewport,100);
+},true);
 
 // enterTrip — renders all trip data into screens then navigates home
 function enterTrip(){
