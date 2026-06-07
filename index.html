@@ -1943,14 +1943,36 @@ function openPhotoUrlInput(){
   if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length)ta.value=T.albumPhotoSrcs.join('\n');
 }
 
-function importPhotoUrls(){
+async function resolvePhotoUrl(url){
+  // Already a direct image — no need to resolve
+  if(!url.includes('photos.app.goo.gl')&&!url.includes('photos.google.com'))return url;
+  try{
+    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+    const res=await fetch(proxy);
+    const data=await res.json();
+    // Extract og:image from the page HTML — Google Photos always has one
+    const match=data.contents.match(/(?:property="og:image"|name="og:image")\s+content="([^"]+)"/)||
+                data.contents.match(/content="([^"]+)"\s+property="og:image"/);
+    if(match&&match[1])return match[1].replace(/&amp;/g,'&');
+  }catch(e){}
+  return url; // fallback to original if anything fails
+}
+
+async function importPhotoUrls(){
   const ta=document.getElementById('photo-urls-input');
   if(!ta)return;
-  const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
-  if(!urls.length){toast('Paste at least one image link');return;}
+  const rawUrls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
+  if(!rawUrls.length){toast('Paste at least one image link');return;}
+
+  // Show resolving state inside the modal
+  const btn=document.querySelector('#photo-url-modal .primary-btn');
+  if(btn){btn.textContent='Resolving…';btn.disabled=true;}
+
+  const urls=await Promise.all(rawUrls.map(resolvePhotoUrl));
+
   T.albumPhotoSrcs=urls;
   T.albumSetupDone=true;
-  if(!T.albumUrl)T.albumUrl=urls[0];
+  if(!T.albumUrl)T.albumUrl=rawUrls[0];
   document.getElementById('photo-url-modal').remove();
   renderAlbumPreview();
   const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
