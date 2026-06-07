@@ -1045,6 +1045,42 @@ async function fbSignInGoogle(){
   }
 }
 
+// ── AUTH GATE ──────────────────────────────────────────────────────
+// Shows a full-screen sign-in prompt; calls cb() after successful sign-in.
+// If already signed in, calls cb() immediately.
+let _authGateCb=null;
+function requireAuth(cb){
+  if(_currentUser){cb();return;}
+  _authGateCb=cb;
+  const overlay=document.createElement('div');
+  overlay.id='auth-gate-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(38,33,92,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML=`
+    <div style="background:#FDFBFF;border-radius:24px;padding:32px 24px;max-width:340px;width:100%;text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">🚗</div>
+      <div style="font-size:20px;font-weight:700;color:#26215C;margin-bottom:8px;">Welcome to Window Seat</div>
+      <div style="font-size:13px;color:#7F77DD;margin-bottom:28px;line-height:1.6;">Sign in with Google so your trip syncs in real-time with your crew.</div>
+      <button id="auth-gate-btn" onclick="authGateSignIn()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+        Continue with Google
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+async function authGateSignIn(){
+  const btn=document.getElementById('auth-gate-btn');
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  try{
+    await fbSignInGoogle();
+    // onAuthStateChanged will set _currentUser; dismiss overlay and call cb
+    const overlay=document.getElementById('auth-gate-overlay');
+    if(overlay)overlay.remove();
+    if(_authGateCb){const cb=_authGateCb;_authGateCb=null;cb();}
+  }catch(e){
+    if(btn){btn.textContent='Continue with Google';btn.disabled=false;}
+  }
+}
+
 // Handle redirect result on page load (called during init)
 async function _handleAuthRedirect(){
   try{
@@ -1207,13 +1243,17 @@ function shareInviteSheet(){
 // Open a trip directly — no splash. Uses the stored crew key for this session.
 // Call this from the trip card "Open trip" button.
 function openTrip(tid){
-  const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
-  activateTrip(trip);
-  // Restore selCrew from stored key, or default to first crew member
-  const storedKey=trip._myCrewKey;
-  selCrew=(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
-  selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-  enterTrip();
+  requireAuth(()=>{
+    const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+    activateTrip(trip);
+    // Restore selCrew from stored key, or default to first crew member
+    // For seed trip, match by googleUid if available; fallback to first crew member
+    const storedKey=trip._myCrewKey;
+    const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
+    selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+    enterTrip();
+  });
 }
 
 // Show splash to pick/create avatar — only called during invite acceptance
@@ -1643,13 +1683,17 @@ function launchNewTrip(){
   if(_currentUser){creator.googleUid=_currentUser.uid;}
   TRIPS.push(newTrip);
   renderAppHome();
-  // Activate the trip and set selCrew to the creator
-  activateTrip(newTrip);
-  selCrew=creator;selPayer=creator;
-  // Immediately persist new trip to Firebase so invite links work at once
-  markDirty();saveState();
-  // Show a post-creation invite prompt before entering the trip
-  openPostCreateInvite(newTrip);
+  requireAuth(()=>{
+    // Link Google account to creator now that we have it
+    if(_currentUser&&!creator.googleUid)creator.googleUid=_currentUser.uid;
+    // Activate the trip and set selCrew to the creator
+    activateTrip(newTrip);
+    selCrew=creator;selPayer=creator;
+    // Immediately persist new trip to Firebase so invite links work at once
+    markDirty();saveState();
+    // Show a post-creation invite prompt before entering the trip
+    openPostCreateInvite(newTrip);
+  });
 }
 
 // ── SPLASH ─────────────────────────────────────────────────────────
@@ -2058,8 +2102,8 @@ function renderBingo(){
       if(m){const av=document.createElement('div');av.style.cssText=`width:22px;height:22px;border-radius:50%;background:${m.bg};border:1.5px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,16);av.title=m.name;cell.appendChild(av);}
     }
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:16px;padding:0 2px;';del.textContent='×';del.title='Remove';
-    del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();};cell.appendChild(del);
-    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;}renderBingo();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
+    del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();markDirty();};cell.appendChild(del);
+    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;}renderBingo();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
     g.appendChild(cell);
   });
   el.appendChild(g);
@@ -2089,7 +2133,7 @@ function renderPC(){
     row.innerHTML=`<div style="flex-shrink:0;">${ico}</div>`;row.appendChild(span);
     if(ch.done&&ch.by){const m=CREW.find(c=>c.key===ch.by);if(m){const av=document.createElement('div');av.style.cssText=`width:26px;height:26px;border-radius:50%;background:${m.bg};border:2px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,20);av.title=m.name;row.appendChild(av);}}
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;flex-shrink:0;';del.textContent='×';del.onclick=(e)=>{e.stopPropagation();T.photoChallenge.splice(i,1);renderPC();};row.appendChild(del);
-    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;}renderPC();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
+    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;}renderPC();markDirty();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
     el.appendChild(row);
   });
 }
@@ -2115,11 +2159,11 @@ function renderPack(){
     info.onclick=()=>togglePack(i);
     const avs=document.createElement('div');avs.style.cssText='display:flex;gap:3px;align-items:center;';
     CREW.forEach(c=>{const d=document.createElement('div');d.style.cssText=`width:20px;height:20px;border-radius:50%;background:${item.ticked&&item.ticked[c.key]?c.bg:'#F3F0FE'};border:1.5px solid ${item.ticked&&item.ticked[c.key]?c.color:'#EEEDFE'};display:flex;align-items:center;justify-content:center;opacity:${item.ticked&&item.ticked[c.key]?1:0.3};`;d.innerHTML=svgAv(c,16);avs.appendChild(d);});
-    const del=document.createElement('button');del.style.cssText='background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:11px;padding:5px 8px;border-radius:6px;margin-left:4px;';del.textContent='✕';del.onclick=()=>{T.pack.splice(i,1);renderPack();};
+    const del=document.createElement('button');del.style.cssText='background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:11px;padding:5px 8px;border-radius:6px;margin-left:4px;';del.textContent='✕';del.onclick=()=>{T.pack.splice(i,1);renderPack();markDirty();};
     avs.appendChild(del);row.appendChild(ico);row.appendChild(info);row.appendChild(avs);el.appendChild(row);
   });
 }
-function togglePack(i){if(!T.pack[i].ticked)T.pack[i].ticked={};T.pack[i].ticked[selCrew.key]=!T.pack[i].ticked[selCrew.key];renderPack();if(T.pack[i].ticked[selCrew.key])toast(selCrew.name+' packed this ✓');}
+function togglePack(i){if(!T.pack[i].ticked)T.pack[i].ticked={};T.pack[i].ticked[selCrew.key]=!T.pack[i].ticked[selCrew.key];renderPack();markDirty();if(T.pack[i].ticked[selCrew.key])toast(selCrew.name+' packed this ✓');}
 function savePackItem(){const v=(document.getElementById('new-pack-item')||{value:''}).value.trim();if(!v)return;T.pack.push({text:v,ticked:{}});document.getElementById('new-pack-item').value='';toggleForm('pack-form');renderPack();markDirty();toast('Item added!');}
 
 // ── SOUNDTRACK ─────────────────────────────────────────────────────
