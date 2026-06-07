@@ -29,6 +29,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <!-- Firebase init — must run before the app script -->
 <script>
@@ -43,6 +44,7 @@ const _fbApp=firebase.initializeApp({
 });
 const _fbDb=firebase.database();
 const _fbAuth=firebase.auth();
+const _fbStorage=firebase.storage();
 const _googleProvider=new firebase.auth.GoogleAuthProvider();
 </script>
 
@@ -505,7 +507,13 @@ textarea{min-height:64px;}
   <div class="scroll">
     <p class="sec-lbl" style="margin-top:8px;">Photo dump</p>
     <div id="album-section"></div>
-    <p class="sec-lbl" style="margin-top:16px;">Highlights</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+      <p class="sec-lbl" style="margin-top:0;">Highlights</p>
+      <button id="share-recap-btn" onclick="shareRecap()" style="display:none;background:#F3F0FE;border:none;cursor:pointer;color:#534AB7;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share recap
+      </button>
+    </div>
     <div id="mem-feed"></div>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <input type="text" id="new-highlight" placeholder="What was the best moment?" style="flex:1;"/>
@@ -1835,6 +1843,24 @@ function renderHighlights(){
     card.innerHTML=`<span class="hl-text">${h}</span><button class="hl-del" onclick="T.highlights.splice(${i},1);renderHighlights()" title="Remove">✕</button>`;
     el.appendChild(card);
   });
+  // Show share button only when there are highlights to share
+  const btn=document.getElementById('share-recap-btn');
+  if(btn)btn.style.display=T.highlights.length?'flex':'none';
+}
+
+async function shareRecap(){
+  const lines=T.highlights.map(h=>`• ${h}`).join('\n');
+  const text=`🚗 ${T.name}\n${T.from} → ${T.to}${T.dateStart?' · '+T.dateStart:''}\n\nTrip highlights:\n${lines}\n\nPlan your road trip with Window Seat`;
+  if(navigator.share){
+    try{await navigator.share({title:T.name+' — Trip Recap',text});}
+    catch(e){if(e.name!=='AbortError')toast('Could not share');}
+  }else{
+    // Fallback: copy to clipboard
+    try{
+      await navigator.clipboard.writeText(text);
+      toast('Recap copied to clipboard! 📋');
+    }catch(e){toast('Could not copy');}
+  }
 }
 function saveHighlight(){
   const v=(document.getElementById('new-highlight')||{value:''}).value.trim();if(!v)return;
@@ -1897,33 +1923,76 @@ function saveAlbumUrl(){
 
 function openPhotoUrlInput(){
   let modal=document.getElementById('photo-url-modal');
-  if(!modal){
-    modal=document.createElement('div');
-    modal.id='photo-url-modal';
-    modal.style.cssText='position:fixed;inset:0;background:rgba(30,20,80,.45);z-index:400;display:flex;align-items:flex-end;justify-content:center;';
-    modal.innerHTML=`
-      <div style="background:#FDFBFF;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:16px;font-weight:700;color:#26215C;">Import photos</div>
-          <button onclick="document.getElementById('photo-url-modal').remove()" style="background:none;border:none;font-size:22px;color:#AFA9EC;cursor:pointer;line-height:1;">×</button>
-        </div>
-        <div style="background:#F7F5FF;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#534AB7;line-height:1.8;">
-          <strong>How to get a photo URL:</strong><br>
-          <strong>Mobile:</strong> Open Google Photos → open a photo → tap ⋮ → Share → Copy link<br>
-          <strong>Desktop:</strong> Open photo → right-click → Copy image address<br>
-          Paste up to 9 URLs, one per line.
-        </div>
-        <label class="form-lbl" style="margin-top:0;">Photo URLs (one per line)</label>
-        <textarea id="photo-urls-input" rows="9" placeholder="https://lh3.googleusercontent.com/...
-https://photos.app.goo.gl/...
-(paste more here)" style="font-size:11px;font-family:monospace;line-height:1.6;"></textarea>
-        <button class="primary-btn" style="margin-top:12px;" onclick="importPhotoUrls()">Save photos</button>
-      </div>`;
-    document.getElementById('app').appendChild(modal);
-  }
+  if(modal)modal.remove();
+  modal=document.createElement('div');
+  modal.id='photo-url-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(30,20,80,.45);z-index:400;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#FDFBFF;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:16px;font-weight:700;color:#26215C;">Add photos</div>
+        <button onclick="document.getElementById('photo-url-modal').remove()" style="background:none;border:none;font-size:22px;color:#AFA9EC;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="photo-upload-progress" style="display:none;background:#F3F0FE;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#534AB7;text-align:center;"></div>
+      <button onclick="triggerPhotoFilePicker()" style="width:100%;padding:16px;border-radius:14px;border:2px dashed #CECBF6;background:#F7F5FF;color:#534AB7;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Choose from camera / gallery
+      </button>
+      <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none;" onchange="uploadPhotosFromFiles(this.files)"/>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;height:1px;background:#EEEDFE;"></div>
+        <div style="font-size:11px;color:#AFA9EC;">or paste URLs</div>
+        <div style="flex:1;height:1px;background:#EEEDFE;"></div>
+      </div>
+      <textarea id="photo-urls-input" rows="4" placeholder="https://lh3.googleusercontent.com/...&#10;(one URL per line)" style="font-size:11px;font-family:monospace;line-height:1.6;"></textarea>
+      <button class="primary-btn" style="margin-top:10px;" onclick="importPhotoUrls()">Save URLs</button>
+    </div>`;
+  document.getElementById('app').appendChild(modal);
   const ta=document.getElementById('photo-urls-input');
-  if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length)ta.value=T.albumPhotoSrcs.join('\n');
-  modal.style.display='flex';
+  if(ta&&T.albumPhotoSrcs&&T.albumPhotoSrcs.length){
+    // Only pre-fill URLs that aren't Firebase Storage URLs (those are managed separately)
+    const nonStorageUrls=T.albumPhotoSrcs.filter(u=>!u.includes('firebasestorage'));
+    if(nonStorageUrls.length)ta.value=nonStorageUrls.join('\n');
+  }
+}
+
+function triggerPhotoFilePicker(){
+  document.getElementById('photo-file-input').click();
+}
+
+async function uploadPhotosFromFiles(files){
+  if(!files||!files.length)return;
+  const MAX=9-(T.albumPhotoSrcs||[]).length;
+  if(MAX<=0){toast('Album is full (max 9 photos)');return;}
+  const toUpload=Array.from(files).slice(0,MAX);
+  const prog=document.getElementById('photo-upload-progress');
+  if(prog){prog.style.display='block';prog.textContent=`Uploading 0 / ${toUpload.length}…`;}
+
+  const newUrls=[];
+  for(let i=0;i<toUpload.length;i++){
+    const file=toUpload[i];
+    const ext=file.name.split('.').pop()||'jpg';
+    const path=`trips/${T.id}/photos/${Date.now()}_${i}.${ext}`;
+    const ref=_fbStorage.ref(path);
+    try{
+      await ref.put(file);
+      const url=await ref.getDownloadURL();
+      newUrls.push(url);
+      if(prog)prog.textContent=`Uploading ${i+1} / ${toUpload.length}…`;
+    }catch(e){
+      console.warn('Upload failed',e);
+      toast('Upload failed — check Storage rules');
+    }
+  }
+
+  if(newUrls.length){
+    T.albumPhotoSrcs=[...(T.albumPhotoSrcs||[]),...newUrls];
+    markDirty();
+    const modal=document.getElementById('photo-url-modal');if(modal)modal.remove();
+    renderAlbumPreview();
+    const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
+    toast(`${newUrls.length} photo${newUrls.length>1?'s':''} uploaded! 📸`);
+  }
 }
 
 function importPhotoUrls(){
@@ -1931,11 +2000,13 @@ function importPhotoUrls(){
   if(!ta)return;
   const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')).slice(0,9);
   if(!urls.length){toast('Paste at least one image URL');return;}
-  T.albumPhotoSrcs=urls;
+  // Merge with any existing Storage URLs
+  const storageUrls=(T.albumPhotoSrcs||[]).filter(u=>u.includes('firebasestorage'));
+  T.albumPhotoSrcs=[...storageUrls,...urls].slice(0,9);
   document.getElementById('photo-url-modal').remove();
   renderAlbumPreview();
-  const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(urls);
-  markDirty();toast(urls.length+' photo'+(urls.length>1?'s':'')+' imported! 📸');
+  const wg=document.getElementById('wrap-album-grid');if(wg)renderAlbumGrid(T.albumPhotoSrcs);
+  markDirty();toast(urls.length+' photo'+(urls.length>1?'s':'')+' saved! 📸');
 }
 
 function fetchAlbumPhotos(){
@@ -2548,8 +2619,30 @@ function loadState(){
 
 // goTo — navigates screens and marks state dirty for non-UI screens
 function goTo(id){
+  history.pushState({screen:id},'',location.pathname);
   _goTo(id);
   if(id!=='s-app-home'&&id!=='s-splash'&&id!=='s-create-trip')markDirty();
+}
+
+window.addEventListener('popstate',e=>{
+  const id=(e.state&&e.state.screen)||'s-app-home';
+  _goTo(id);
+});
+
+// ── KEYBOARD-SAFE BOTTOM NAV ───────────────────────────────────────
+// When the iOS/Android keyboard opens, visualViewport shrinks but
+// window.innerHeight stays the same. Translate the fixed bnav up
+// by the keyboard height so it never sits behind the keyboard.
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>{
+    const bnav=document.querySelector('.bnav');if(!bnav)return;
+    const kb=window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop;
+    if(kb>80){
+      bnav.style.transform=`translateX(-50%) translateY(-${Math.round(kb)}px)`;
+    }else{
+      bnav.style.transform='translateX(-50%)';
+    }
+  });
 }
 
 // enterTrip — renders all trip data into screens then navigates home
@@ -2632,8 +2725,9 @@ self.addEventListener('fetch',e=>{
   const url=e.request.url;
   if(url.includes('accounts.spotify.com')||url.includes('api.spotify.com')||
      url.includes('allorigins.win')||url.includes('firebaseapp.com')||
-     url.includes('firebasedatabase.app')||url.includes('googleapis.com')||
-     url.includes('accounts.google.com')||url.includes('firebase.google.com'))return;
+     url.includes('firebasedatabase.app')||url.includes('firebasestorage')||
+     url.includes('googleapis.com')||url.includes('accounts.google.com')||
+     url.includes('firebase.google.com'))return;
   e.respondWith(
     caches.match(e.request).then(cached=>{
       const live=fetch(e.request).then(res=>{
