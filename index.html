@@ -137,6 +137,11 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
 .note-text{font-size:14px;color:#3C3489;line-height:1.6;}
 .wrap-photo{border-radius:8px;aspect-ratio:1;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;position:relative;}
 .wrap-photo img{width:100%;height:100%;object-fit:cover;}
+.sync-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;letter-spacing:.02em;}
+.sync-chip.syncing{background:#FFF0E0;color:#9B4A00;}
+.sync-chip.saved{background:#E1F5EE;color:#0F6E56;}
+.sync-chip.offline{background:#FBEAF0;color:#993556;}
+.you-are-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:2px 8px 2px 4px;border-radius:10px;border:1.5px solid currentColor;opacity:.85;}
 .toast{background:#534AB7;color:#fff;font-size:13px;padding:9px 20px;border-radius:22px;text-align:center;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;white-space:nowrap;}
 .toast.show{opacity:1;}
 .form-lbl{font-size:12px;color:#534AB7;margin-bottom:5px;display:block;margin-top:13px;font-weight:600;}
@@ -420,7 +425,11 @@ textarea{min-height:64px;}
     <div id="home-av" style="width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #AFA9EC;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
     <div style="flex:1;min-width:0;overflow:hidden;">
       <div style="font-size:15px;font-weight:700;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
-      <div style="font-size:11px;color:#534AB7;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-sub"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+        <div style="font-size:11px;color:#534AB7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-sub"></div>
+        <div id="sync-status" style="display:none;"></div>
+      </div>
+      <div id="you-are-chip" style="display:none;margin-top:4px;"></div>
     </div>
     <button onclick="goTo('s-app-home')" style="background:rgba(83,74,183,.12);border:none;cursor:pointer;color:#534AB7;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">← All trips</button>
   </div>
@@ -913,6 +922,7 @@ function activateTrip(trip){
   selCrew=CREW[0]||{key:'',name:'',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
   selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
   fbListenToTrip(trip.id);
+  renderYouAreChip();
 }
 
 // ── FIREBASE REAL-TIME SYNC ────────────────────────────────────────
@@ -950,9 +960,39 @@ function fbListenToTrip(tripId){
   });
 }
 
+let _syncHideTimer=null;
+function _showSync(state){
+  const el=document.getElementById('sync-status');if(!el)return;
+  clearTimeout(_syncHideTimer);
+  const cfg={
+    syncing:{cls:'syncing',icon:'↑',text:'Syncing'},
+    saved:{cls:'saved',icon:'✓',text:'Saved'},
+    offline:{cls:'offline',icon:'✕',text:'Offline'},
+  }[state];
+  if(!cfg){el.style.display='none';return;}
+  el.style.display='inline-flex';
+  el.innerHTML=`<span class="sync-chip ${cfg.cls}">${cfg.icon} ${cfg.text}</span>`;
+  if(state==='saved')_syncHideTimer=setTimeout(()=>{el.style.display='none';},2000);
+}
+
 function fbSaveTrip(trip){
   if(!trip||trip.id===SEED_ID)return;
-  _fbDb.ref('trips/'+trip.id).set(trip).catch(e=>console.warn('Firebase save error',e));
+  _showSync('syncing');
+  _fbDb.ref('trips/'+trip.id).set(trip)
+    .then(()=>_showSync('saved'))
+    .catch(e=>{console.warn('Firebase save error',e);_showSync('offline');});
+}
+
+// Online/offline detection
+window.addEventListener('online', ()=>{if(T&&T.id!==SEED_ID)fbSaveTrip(T);});
+window.addEventListener('offline',()=>_showSync('offline'));
+
+// ── IDENTITY CHIP ──────────────────────────────────────────────────
+function renderYouAreChip(){
+  const el=document.getElementById('you-are-chip');if(!el)return;
+  if(!selCrew||!selCrew.name){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML=`<span class="you-are-pill" style="color:${selCrew.color};background:${selCrew.bg};">${svgAv(selCrew,14)} You are ${selCrew.name}</span>`;
 }
 
 // ── GOOGLE AUTH ────────────────────────────────────────────────────
@@ -963,7 +1003,7 @@ _fbAuth.onAuthStateChanged(user=>{
   // When auth state resolves, auto-identify the user's crew member
   if(user&&T&&T.id!==SEED_ID){
     const match=CREW.find(c=>c.googleUid===user.uid);
-    if(match){selCrew=match;selPayer=match;}
+    if(match){selCrew=match;selPayer=match;renderYouAreChip();}
   }
   renderGoogleAuthUI();
 });
@@ -1683,6 +1723,7 @@ function _enterTrip(){
 function renderHomeCrew(){
   const el=document.getElementById('home-crew-badges');if(!el)return;el.innerHTML='';
   CREW.forEach(c=>{const b=document.createElement('span');b.className='pill';b.style.cssText=`background:${c.bg};color:${c.color};display:inline-flex;align-items:center;gap:4px;`;b.innerHTML=svgAv(c,14)+'&nbsp;'+c.name;el.appendChild(b);});
+  renderYouAreChip();
 }
 
 // ── COUNTDOWN ──────────────────────────────────────────────────────
