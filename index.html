@@ -1082,6 +1082,12 @@ let _currentUser=null;
 
 _fbAuth.onAuthStateChanged(user=>{
   _currentUser=user;
+  // If there's a pending auth gate waiting for sign-in, resolve it now
+  if(user&&_authGateCb){
+    const overlay=document.getElementById('auth-gate-overlay');
+    if(overlay)overlay.remove();
+    const cb=_authGateCb;_authGateCb=null;cb();
+  }
   // When auth state resolves, auto-identify the user's crew member
   if(user&&T){
     const match=CREW.find(c=>c.googleUid===user.uid);
@@ -2281,11 +2287,7 @@ const WYR_POOL=[
 ];
 
 function startWYR(){
-  if(!T.wyr){
-    const q=WYR_POOL[Math.floor(Math.random()*WYR_POOL.length)];
-    T.wyr={a:q.a,b:q.b,votes:{},revealed:false,used:[WYR_POOL.indexOf(q)]};
-    markDirty();
-  }
+  if(!T.wyr||T.wyr.revealed){wyrNext();return;}
   renderWYR();
 }
 
@@ -2301,8 +2303,7 @@ function wyrVote(choice){
 }
 
 function wyrNext(){
-  if(!T.wyr)return;
-  const used=T.wyr.used||[];
+  const used=(T.wyr&&T.wyr.used)||[];
   const remaining=WYR_POOL.map((_,i)=>i).filter(i=>!used.includes(i));
   const pool=remaining.length?remaining:WYR_POOL.map((_,i)=>i);
   const idx=pool[Math.floor(Math.random()*pool.length)];
