@@ -546,6 +546,8 @@ textarea{min-height:64px;}
     <div class="game-tile" onclick="goTo('s-game-dare');shuffleDare()"><div class="game-tile-icon" style="background:#FAEEDA;">🎲</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Dare spinner</div><div style="font-size:12px;color:#AFA9EC;" id="dares-count">8 dares in the pool</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
     <div class="game-tile" onclick="goTo('s-game-photo')"><div class="game-tile-icon" style="background:#E1F5EE;">📸</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Photo challenge</div><div style="font-size:12px;color:#AFA9EC;" id="pc-prog">0 / 6 completed</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
     <div class="game-tile" onclick="goTo('s-game-wyr');startWYR()"><div class="game-tile-icon" style="background:#FBEAF0;">🤔</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Would you rather</div><div style="font-size:12px;color:#AFA9EC;">Vote &amp; see what the crew thinks</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="game-tile" onclick="goTo('s-game-trivia');startTrivia()"><div class="game-tile-icon" style="background:#E8F4FD;">🧠</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Trivia battle</div><div style="font-size:12px;color:#AFA9EC;" id="trivia-score-sub">Quiz the crew on road trip facts</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="game-tile" onclick="goTo('s-game-predict');startPredict()"><div class="game-tile-icon" style="background:#E8FDF0;">🔮</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Predict the trip</div><div style="font-size:12px;color:#AFA9EC;" id="predict-score-sub">Guess what'll happen on the road</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
     <p class="sec-lbl" style="margin-top:18px;">🏆 Leaderboard</p>
     <div id="game-leaderboard"></div>
   </div>
@@ -621,6 +623,36 @@ textarea{min-height:64px;}
   <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🤔 Would you rather</span></div>
   <div class="scroll">
     <div id="wyr-card"></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- TRIVIA BATTLE -->
+<div class="screen" id="s-game-trivia">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🧠 Trivia battle</span></div>
+  <div class="scroll">
+    <div id="trivia-card"></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- PREDICT THE TRIP -->
+<div class="screen" id="s-game-predict">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🔮 Predict the trip</span></div>
+  <div class="scroll">
+    <div id="predict-card"></div>
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -898,7 +930,7 @@ function makeTripData(o){
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
     spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],_dataV:3,
-    feed:[],vibes:{},journal:{},wyr:null,
+    feed:[],vibes:{},journal:{},wyr:null,trivia:null,predict:null,
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -1035,7 +1067,7 @@ function fbListenToTrip(tripId){
       renderStops();renderHighlights();renderAlbumPreview();
       renderHomeCrew();renderCrewCards();renderExpenses();
       renderExpPayerBtns();renderSplitBtns();renderSongs();
-      renderWrap();renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
+      renderWrap();renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();renderTrivia();renderPredict();
       refreshPack();renderNotifFeed();
       renderFeed();renderRouteProgress();renderJournal();
       const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
@@ -1865,7 +1897,7 @@ function _enterTrip(){
   rebuildCatSelect();
   renderHomeCrew();updateCountdown();renderStops();
   renderHighlights();renderAlbumPreview();
-  renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
+  renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();renderTrivia();renderPredict();
   refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
   renderSongs();renderCrewCards();renderWrap();
   renderFeed();renderRouteProgress();fetchWeather();
@@ -2283,10 +2315,14 @@ function renderGameLeaderboard(){
   const el=document.getElementById('game-leaderboard');if(!el||!T)return;
   if(!CREW.length){el.innerHTML='';return;}
   const medals=['🥇','🥈','🥉'];
+  const triviaScores=(T.trivia&&T.trivia.scores)||{};
+  const predictScores=(T.predict&&T.predict.scores)||{};
   const scores=CREW.map(c=>{
     const bingo=(T.bingo||[]).filter(b=>b.by===c.key).length;
     const photo=(T.photoChallenge||[]).filter(p=>p.by===c.key).length;
-    return {c,bingo,photo,total:bingo+photo};
+    const trivia=triviaScores[c.key]||0;
+    const predict=predictScores[c.key]||0;
+    return {c,bingo,photo,trivia,predict,total:bingo+photo+trivia+predict};
   }).sort((a,b)=>b.total-a.total);
   if(scores.every(s=>s.total===0)){
     el.innerHTML='<div style="text-align:center;color:#AFA9EC;font-size:13px;padding:16px 0;">No scores yet — start playing!</div>';
@@ -2298,7 +2334,7 @@ function renderGameLeaderboard(){
       <div style="width:34px;height:34px;border-radius:50%;background:${s.c.bg};border:2px solid ${s.c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(s.c,26)}</div>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:600;color:#3C3489;">${s.c.name}</div>
-        <div style="font-size:11px;color:#AFA9EC;margin-top:1px;">🎯 ${s.bingo} bingo &nbsp;📸 ${s.photo} photo</div>
+        <div style="font-size:11px;color:#AFA9EC;margin-top:1px;">🎯 ${s.bingo} &nbsp;📸 ${s.photo} &nbsp;🧠 ${s.trivia} &nbsp;🔮 ${s.predict}</div>
       </div>
       <div style="font-size:20px;font-weight:700;color:${i===0?'#EF9F27':i===1?'#AFA9EC':i===2?'#CD7F32':'#534AB7'};">${s.total}</div>
     </div>`).join('')
@@ -2390,6 +2426,230 @@ function renderWYR(){
       ${!myVote?'<div style="font-size:12px;color:#AFA9EC;">Tap to vote — results reveal when everyone answers</div>':''}
       ${myVote&&!revealed?`<div style="font-size:12px;color:#AFA9EC;">${CREW.length-totalVotes>0?`Waiting for ${CREW.length-totalVotes} more…`:'Revealing soon…'}</div>`:''}
       ${revealed?`<button onclick="wyrNext()" style="background:#534AB7;color:#fff;border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;">Next question →</button>`:''}
+    </div>`;
+}
+
+// ── TRIVIA BATTLE ─────────────────────────────────────────────────
+const TRIVIA_POOL=[
+  {q:'What is India\'s longest national highway?',opts:['NH 44','NH 48','NH 27','NH 58'],ans:0},
+  {q:'The Golden Quadrilateral highway connects how many major cities?',opts:['3','4','5','6'],ans:1},
+  {q:'Which mountain pass is the highest motorable road in the world?',opts:['Rohtang Pass','Khardung La','Chang La','Bara-lacha La'],ans:1},
+  {q:'What does a yellow dividing line in the middle of a road mean?',opts:['Overtaking allowed','No overtaking','Speed limit zone','Pedestrian crossing'],ans:1},
+  {q:'The scenic Konkan coastal highway is known as which NH?',opts:['NH 66','NH 48','NH 27','NH 17'],ans:0},
+  {q:'Which Indian state is called "God\'s Own Country"?',opts:['Goa','Kerala','Karnataka','Tamil Nadu'],ans:1},
+  {q:'What colour are directional highway signs in India?',opts:['Blue','Yellow','Green','White'],ans:2},
+  {q:'Which city is roughly at the geographic centre of India?',opts:['Nagpur','Bhopal','Hyderabad','Jabalpur'],ans:0},
+  {q:'The famous Spiti Valley is in which state?',opts:['Uttarakhand','Himachal Pradesh','Sikkim','Arunachal Pradesh'],ans:1},
+  {q:'What does GPS stand for?',opts:['General Positioning System','Global Positioning System','Geo Point System','Ground Path System'],ans:1},
+  {q:'Which Indian state has the most road network length?',opts:['Maharashtra','Rajasthan','Uttar Pradesh','Madhya Pradesh'],ans:2},
+  {q:'The Rohtang Pass connects which two valleys?',opts:['Spiti & Lahaul','Kullu & Lahaul','Kullu & Spiti','Kangra & Spiti'],ans:1},
+  {q:'What is the speed limit on most Indian expressways?',opts:['80 km/h','100 km/h','120 km/h','60 km/h'],ans:2},
+  {q:'In which state is the famous Munnar hill station?',opts:['Karnataka','Tamil Nadu','Kerala','Andhra Pradesh'],ans:2},
+  {q:'Which city was the first in India to get an expressway?',opts:['Delhi','Mumbai','Pune','Ahmedabad'],ans:1},
+];
+
+function startTrivia(){
+  if(!T.trivia||T.trivia.revealed){triviaNext();return;}
+  renderTrivia();
+}
+function triviaAnswer(idx){
+  if(!T.trivia)return;
+  if(T.trivia.revealed){toast('Question already revealed! Try the next one.');return;}
+  if(!T.trivia.answers)T.trivia.answers={};
+  T.trivia.answers[selCrew.key]=idx;
+  markDirty();renderTrivia();
+  const total=Object.keys(T.trivia.answers).length;
+  if(total>=CREW.length){
+    setTimeout(()=>{
+      if(T.trivia&&!T.trivia.revealed){
+        T.trivia.revealed=true;
+        // Award points
+        if(!T.trivia.scores)T.trivia.scores={};
+        CREW.forEach(c=>{
+          if((T.trivia.answers||{})[c.key]===T.trivia.ans){
+            T.trivia.scores[c.key]=(T.trivia.scores[c.key]||0)+1;
+          }
+        });
+        markDirty();renderTrivia();renderGameLeaderboard();
+      }
+    },600);
+  }
+}
+function triviaReveal(){
+  if(!T.trivia||T.trivia.revealed)return;
+  T.trivia.revealed=true;
+  if(!T.trivia.scores)T.trivia.scores={};
+  CREW.forEach(c=>{
+    if((T.trivia.answers||{})[c.key]===T.trivia.ans){
+      T.trivia.scores[c.key]=(T.trivia.scores[c.key]||0)+1;
+    }
+  });
+  markDirty();renderTrivia();renderGameLeaderboard();
+}
+function triviaNext(){
+  const used=(T.trivia&&T.trivia.used)||[];
+  // Carry over scores
+  const scores=(T.trivia&&T.trivia.scores)||{};
+  const remaining=TRIVIA_POOL.map((_,i)=>i).filter(i=>!used.includes(i));
+  const pool=remaining.length?remaining:TRIVIA_POOL.map((_,i)=>i);
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  const q=TRIVIA_POOL[idx];
+  const newUsed=[...used,idx].slice(-TRIVIA_POOL.length);
+  T.trivia={q:q.q,opts:q.opts,ans:q.ans,answers:{},revealed:false,scores,used:newUsed};
+  markDirty();renderTrivia();
+}
+function renderTrivia(){
+  const el=document.getElementById('trivia-card');if(!el||!T)return;
+  if(!T.trivia){el.innerHTML='<div style="text-align:center;padding:40px;color:#AFA9EC;">Loading…</div>';return;}
+  const {q,opts,ans,revealed}=T.trivia;
+  const answers=T.trivia.answers||{};
+  const scores=T.trivia.scores||{};
+  const myAns=answers[selCrew.key];
+  const totalAnswered=Object.keys(answers).length;
+  const letters=['A','B','C','D'];
+  const colors=['#2D7DD2','#D4537E','#27AE60','#E67E22'];
+  const lightColors=['#E8F4FD','#FBEAF0','#E8FDF0','#FEF5E7'];
+
+  const scoreBar=Object.keys(scores).length?`<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;margin-bottom:8px;">SCORES THIS GAME</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    ${CREW.map(c=>`<div style="display:flex;align-items:center;gap:5px;background:#F7F5FF;border-radius:20px;padding:4px 10px;"><span style="font-size:12px;">${svgAv(c,16)}</span><span style="font-size:12px;font-weight:600;color:#3C3489;">${c.name.split(' ')[0]}</span><span style="font-size:13px;font-weight:700;color:#534AB7;">${scores[c.key]||0}</span></div>`).join('')}
+    </div></div>`:'';
+
+  el.innerHTML=`
+    ${scoreBar}
+    <div style="background:#F0F7FF;border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid #C8E4F8;">
+      <div style="font-size:11px;font-weight:700;color:#2D7DD2;letter-spacing:.08em;margin-bottom:10px;">🧠 TRIVIA BATTLE</div>
+      <div style="font-size:16px;font-weight:600;color:#26215C;line-height:1.4;">${q}</div>
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+    ${opts.map((opt,i)=>{
+      const chosen=myAns===i;
+      const correct=revealed&&i===ans;
+      const wrong=revealed&&chosen&&i!==ans;
+      const bg=correct?lightColors[1]:wrong?'#FFF0F0':chosen?lightColors[0]:'#fff';
+      const border=correct?'#27AE60':wrong?'#E74C3C':chosen?colors[0]:'#CECBF6';
+      const voters=revealed?CREW.filter(c=>answers[c.key]===i):[];
+      return `<button onclick="triviaAnswer(${i})" style="width:100%;border:2px solid ${border};background:${bg};border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .15s;${myAns!==undefined&&!chosen&&!correct?'opacity:.55;':''}">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:${chosen||correct?colors[i%4]:lightColors[i%4]};color:${chosen||correct?'#fff':colors[i%4]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${letters[i]}</div>
+          <div style="font-size:14px;font-weight:500;color:#26215C;flex:1;">${opt}</div>
+          ${correct?'<span style="font-size:18px;">✅</span>':wrong?'<span style="font-size:18px;">❌</span>':''}
+        </div>
+        ${revealed&&voters.length?`<div style="display:flex;gap:3px;margin-top:8px;padding-left:36px;">${voters.map(c=>`<div title="${c.name}" style="width:22px;height:22px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:inline-flex;align-items:center;justify-content:center;">${svgAv(c,16)}</div>`).join('')}</div>`:''}
+      </button>`;
+    }).join('')}
+    </div>
+    <div style="margin-top:14px;text-align:center;">
+      ${!myAns&&myAns!==0?'<div style="font-size:12px;color:#AFA9EC;">Tap your answer — reveals when everyone picks</div>':''}
+      ${myAns!==undefined&&!revealed?`<div style="font-size:12px;color:#AFA9EC;">${CREW.length-totalAnswered>0?`Waiting for ${CREW.length-totalAnswered} more…`:'Revealing soon…'}</div>
+        <button onclick="triviaReveal()" style="background:#E8F4FD;color:#2D7DD2;border:none;border-radius:20px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;">Reveal now</button>`:''}
+      ${revealed?`<div style="font-size:13px;color:#27AE60;font-weight:600;margin-bottom:8px;">${(answers[selCrew.key]===ans)?'🎉 You got it right!':'😬 Better luck next time!'}</div><button onclick="triviaNext()" style="background:#2D7DD2;color:#fff;border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">Next question →</button>`:''}
+    </div>`;
+}
+
+// ── PREDICT THE TRIP ───────────────────────────────────────────────
+const PREDICT_POOL=[
+  'Who will fall asleep first on the drive?',
+  'Who will need the most bathroom breaks?',
+  'Who will be the most excited about food stops?',
+  'Who will complain about the music most?',
+  'Who will take the most photos?',
+  'Who will give the wrong directions?',
+  'Who will be first to say "Are we there yet?"',
+  'Who will spend the most money on the trip?',
+  'Who will be last ready every morning?',
+  'Who will suggest the most unplanned detours?',
+  'Who will hog the aux cord?',
+  'Who will be the first to spot something cool outside?',
+];
+
+function startPredict(){
+  if(!T.predict||T.predict.revealed){predictNext();return;}
+  renderPredict();
+}
+function predictVote(crewKey){
+  if(!T.predict)return;
+  if(T.predict.revealed){toast('Already revealed! Move to the next one.');return;}
+  if(!T.predict.answers)T.predict.answers={};
+  T.predict.answers[selCrew.key]=crewKey;
+  markDirty();renderPredict();
+  const total=Object.keys(T.predict.answers).length;
+  if(total>=CREW.length){
+    setTimeout(()=>{if(T.predict&&!T.predict.revealed){renderPredict();}},400);
+  }
+}
+function predictReveal(actualKey){
+  if(!T.predict||T.predict.revealed)return;
+  T.predict.revealed=true;
+  T.predict.actual=actualKey;
+  if(!T.predict.scores)T.predict.scores={};
+  CREW.forEach(c=>{
+    if((T.predict.answers||{})[c.key]===actualKey){
+      T.predict.scores[c.key]=(T.predict.scores[c.key]||0)+1;
+    }
+  });
+  markDirty();renderPredict();renderGameLeaderboard();
+}
+function predictNext(){
+  const used=(T.predict&&T.predict.used)||[];
+  const scores=(T.predict&&T.predict.scores)||{};
+  const remaining=PREDICT_POOL.map((_,i)=>i).filter(i=>!used.includes(i));
+  const pool=remaining.length?remaining:PREDICT_POOL.map((_,i)=>i);
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  const newUsed=[...used,idx].slice(-PREDICT_POOL.length);
+  T.predict={question:PREDICT_POOL[idx],answers:{},revealed:false,actual:null,scores,used:newUsed};
+  markDirty();renderPredict();
+}
+function renderPredict(){
+  const el=document.getElementById('predict-card');if(!el||!T)return;
+  if(!T.predict){el.innerHTML='<div style="text-align:center;padding:40px;color:#AFA9EC;">Loading…</div>';return;}
+  const {question,revealed,actual}=T.predict;
+  const answers=T.predict.answers||{};
+  const scores=T.predict.scores||{};
+  const myAns=answers[selCrew.key];
+  const totalAnswered=Object.keys(answers).length;
+
+  const scoreBar=Object.keys(scores).length?`<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;margin-bottom:8px;">SCORES THIS GAME</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    ${CREW.map(c=>`<div style="display:flex;align-items:center;gap:5px;background:#F7F5FF;border-radius:20px;padding:4px 10px;">${svgAv(c,16)}<span style="font-size:12px;font-weight:600;color:#3C3489;margin-left:4px;">${c.name.split(' ')[0]}</span><span style="font-size:13px;font-weight:700;color:#27AE60;">${scores[c.key]||0}</span></div>`).join('')}
+    </div></div>`:'';
+
+  // Tally votes per crew member (for reveal)
+  const tally={};CREW.forEach(c=>{tally[c.key]=Object.values(answers).filter(v=>v===c.key).length;});
+
+  el.innerHTML=`
+    ${scoreBar}
+    <div style="background:#EDFAF3;border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid #C3EDDA;">
+      <div style="font-size:11px;font-weight:700;color:#27AE60;letter-spacing:.08em;margin-bottom:10px;">🔮 PREDICT THE TRIP</div>
+      <div style="font-size:17px;font-weight:600;color:#26215C;line-height:1.4;">${question}</div>
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+    ${CREW.map(c=>{
+      const chosen=myAns===c.key;
+      const isActual=revealed&&actual===c.key;
+      const wrong=revealed&&chosen&&actual!==c.key;
+      const predictors=revealed?CREW.filter(cr=>answers[cr.key]===c.key):[];
+      return `<button onclick="predictVote('${c.key}')" style="width:100%;border:2px solid ${isActual?'#27AE60':wrong?'#E74C3C':chosen?c.color:'#CECBF6'};background:${isActual?'#EDFAF3':wrong?'#FFF0F0':chosen?c.bg:'#fff'};border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .15s;${myAns&&!chosen&&!isActual?'opacity:.55;':''}">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(c,22)}</div>
+          <div style="font-size:14px;font-weight:600;color:#26215C;flex:1;">${c.name}</div>
+          ${isActual?'<span style="font-size:18px;">✅</span>':wrong?'<span style="font-size:18px;">❌</span>':''}
+          ${revealed&&tally[c.key]?`<span style="font-size:12px;font-weight:700;color:#AFA9EC;">${tally[c.key]} vote${tally[c.key]>1?'s':''}</span>`:''}
+        </div>
+        ${revealed&&predictors.length?`<div style="display:flex;gap:3px;margin-top:8px;padding-left:44px;">${predictors.map(cr=>`<div title="${cr.name} predicted this" style="width:22px;height:22px;border-radius:50%;background:${cr.bg};border:2px solid ${cr.color};display:inline-flex;align-items:center;justify-content:center;">${svgAv(cr,16)}</div>`).join('')}</div>`:''}
+      </button>`;
+    }).join('')}
+    </div>
+    <div style="margin-top:14px;text-align:center;">
+      ${!myAns?'<div style="font-size:12px;color:#AFA9EC;">Tap who you think it\'ll be!</div>':''}
+      ${myAns&&!revealed?`<div style="font-size:12px;color:#AFA9EC;">${CREW.length-totalAnswered>0?`${CREW.length-totalAnswered} still predicting…`:'Everyone\'s in — now reveal the truth!'}</div>
+        <div style="margin-top:12px;font-size:13px;font-weight:600;color:#3C3489;margin-bottom:8px;">Who actually did it? Tap to reveal:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+        ${CREW.map(c=>`<button onclick="predictReveal('${c.key}')" style="background:${c.bg};color:${c.color};border:2px solid ${c.color};border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;">${c.name.split(' ')[0]}</button>`).join('')}
+        </div>`:''}
+      ${revealed?`<div style="font-size:13px;color:#27AE60;font-weight:600;margin-bottom:10px;">${answers[selCrew.key]===actual?'🎉 You predicted correctly!':'😅 Wrong this time!'}</div><button onclick="predictNext()" style="background:#27AE60;color:#fff;border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">Next prediction →</button>`:''}
     </div>`;
 }
 
@@ -3035,7 +3295,7 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}if(id==='s-games')renderGameLeaderboard();if(id==='s-game-wyr')renderWYR();}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}if(id==='s-games')renderGameLeaderboard();if(id==='s-game-wyr')renderWYR();if(id==='s-game-trivia')renderTrivia();if(id==='s-game-predict')renderPredict();}
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
 // Everything lives in localStorage under 'ws_state'.
