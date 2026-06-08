@@ -1061,10 +1061,11 @@ function _showSync(state){
 
 function fbSaveTrip(trip){
   if(!trip)return;
+  if(!_currentUser){_showSync('offline');return;} // not signed in — skip write
   _showSync('syncing');
   _fbDb.ref('trips/'+trip.id).set(trip)
     .then(()=>_showSync('saved'))
-    .catch(e=>{console.warn('Firebase save error',e);_showSync('offline');});
+    .catch(e=>{console.warn('Firebase save error',e);_showSync(e.code==='PERMISSION_DENIED'||e.message&&e.message.includes('permission')?'offline':'offline');});
 }
 
 // Online/offline detection
@@ -1359,21 +1360,23 @@ function shareInviteSheet(){
 // Open a trip directly — no splash. Uses the stored crew key for this session.
 // Call this from the trip card "Open trip" button.
 function openTrip(tid){
-  try{
-    const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
-    if(!trip){toast('No trip found for id: '+tid);return;}
-    if(!Array.isArray(trip.crew))trip.crew=[];
-    activateTrip(trip);
-    const storedKey=trip._myCrewKey;
-    const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
-    selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
-    if(!selCrew){selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};}
-    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-    enterTrip();
-  }catch(e){
-    console.error('openTrip error',e);
-    toast('Error opening trip: '+e.message);
-  }
+  requireAuth(()=>{
+    try{
+      const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+      if(!trip){toast('No trip found');return;}
+      if(!Array.isArray(trip.crew))trip.crew=[];
+      activateTrip(trip);
+      const storedKey=trip._myCrewKey;
+      const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
+      selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+      if(!selCrew){selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};}
+      selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+      enterTrip();
+    }catch(e){
+      console.error('openTrip error',e);
+      toast('Error opening trip: '+e.message);
+    }
+  });
 }
 
 // Show splash to pick/create avatar — only called during invite acceptance
