@@ -72,8 +72,6 @@ const _googleProvider=new firebase.auth.GoogleAuthProvider();
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-.feed-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #F3F0FE;}
-.feed-entry:last-child{border-bottom:none;}
 .feed-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center;margin-top:1px;}
 .feed-msg{font-size:12px;color:#3C3489;flex:1;line-height:1.4;}
 .feed-time{font-size:10px;color:#CECBF6;flex-shrink:0;padding-top:2px;}
@@ -435,9 +433,9 @@ textarea{min-height:64px;}
       <div style="font-size:15px;font-weight:700;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
         <div style="font-size:11px;color:#534AB7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-sub"></div>
-        <span id="weather-chip" style="display:none;font-size:10px;color:#534AB7;background:#EEEDFE;border-radius:10px;padding:2px 7px;white-space:nowrap;flex-shrink:0;"></span>
         <div id="sync-status" style="display:none;"></div>
       </div>
+      <div style="margin-top:3px;"><span id="weather-chip" style="display:none;font-size:10px;color:#534AB7;background:#EEEDFE;border-radius:10px;padding:2px 7px;white-space:nowrap;"></span></div>
     </div>
     <button onclick="goTo('s-app-home')" style="background:rgba(83,74,183,.12);border:none;cursor:pointer;color:#534AB7;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">← All trips</button>
   </div>
@@ -461,7 +459,6 @@ textarea{min-height:64px;}
     <p class="sec-lbl">The crew</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="home-crew-badges"></div>
     <div id="route-progress"></div>
-    <div id="activity-feed-wrap"></div>
     <p class="sec-lbl" style="margin-top:2px;">Quick links</p>
     <div class="card" style="cursor:pointer;" onclick="goTo('s-route')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Route &amp; stops</div><div style="font-size:12px;color:#AFA9EC;" id="home-stops-sub">6 stops</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
     <div class="card" style="cursor:pointer;" onclick="goTo('s-memories')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Memories &amp; photos</div><div style="font-size:12px;color:#AFA9EC;">Photos &amp; highlights</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
@@ -2652,15 +2649,7 @@ function addFeedEntry(icon,msg){
   if(T.feed.length>50)T.feed.length=50;
   renderFeed();markDirty();
 }
-function renderFeed(){
-  const el=document.getElementById('activity-feed-wrap');if(!el)return;
-  if(!T.feed||!T.feed.length){el.innerHTML='';return;}
-  const entries=T.feed.slice(0,8);
-  el.innerHTML='<p class="sec-lbl" style="margin-top:0;margin-bottom:6px;">What\'s happening</p>'
-    +'<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:4px 12px;">'
-    +entries.map(e=>`<div class="feed-entry"><div class="feed-icon">${e.icon}</div><div class="feed-msg">${e.msg}</div><div class="feed-time">${timeAgo(e.ts)}</div></div>`).join('')
-    +'</div>';
-}
+function renderFeed(){}
 
 // ── ROUTE PROGRESS ──────────────────────────────────────────────────
 function renderRouteProgress(){
