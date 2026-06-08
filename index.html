@@ -985,7 +985,7 @@ const STATUS_META={
 
 // Switch which trip is active — load its data into working variables
 function activateTrip(trip){
-  T=trip;CREW=T.crew;
+  T=trip;CREW=Array.isArray(T.crew)?T.crew:[];
   selCrew=CREW[0]||{key:'',name:'',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
   selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
   fbListenToTrip(trip.id);
@@ -1359,15 +1359,21 @@ function shareInviteSheet(){
 // Open a trip directly — no splash. Uses the stored crew key for this session.
 // Call this from the trip card "Open trip" button.
 function openTrip(tid){
-  const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
-  if(!trip){toast('Trip not found');return;}
-  activateTrip(trip);
-  const storedKey=trip._myCrewKey;
-  const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
-  selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
-  if(!selCrew&&CREW.length)selCrew=CREW[0];
-  selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-  try{enterTrip();}catch(e){console.error('enterTrip error',e);toast('Error opening trip — please refresh');}
+  try{
+    const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+    if(!trip){toast('No trip found for id: '+tid);return;}
+    if(!Array.isArray(trip.crew))trip.crew=[];
+    activateTrip(trip);
+    const storedKey=trip._myCrewKey;
+    const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
+    selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+    if(!selCrew){selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};}
+    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+    enterTrip();
+  }catch(e){
+    console.error('openTrip error',e);
+    toast('Error opening trip: '+e.message);
+  }
 }
 
 // Show splash to pick/create avatar — only called during invite acceptance
