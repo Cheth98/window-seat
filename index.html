@@ -1359,17 +1359,15 @@ function shareInviteSheet(){
 // Open a trip directly — no splash. Uses the stored crew key for this session.
 // Call this from the trip card "Open trip" button.
 function openTrip(tid){
-  requireAuth(()=>{
-    const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
-    activateTrip(trip);
-    // Restore selCrew from stored key, or default to first crew member
-    // For seed trip, match by googleUid if available; fallback to first crew member
-    const storedKey=trip._myCrewKey;
-    const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
-    selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
-    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-    enterTrip();
-  });
+  const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+  if(!trip){toast('Trip not found');return;}
+  activateTrip(trip);
+  const storedKey=trip._myCrewKey;
+  const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
+  selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+  if(!selCrew&&CREW.length)selCrew=CREW[0];
+  selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+  try{enterTrip();}catch(e){console.error('enterTrip error',e);toast('Error opening trip — please refresh');}
 }
 
 // Show splash to pick/create avatar — only called during invite acceptance
