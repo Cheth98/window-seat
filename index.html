@@ -3034,7 +3034,7 @@ if(pendingInvite){
     renderBingo();renderDareList();renderPC();
     refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
     renderSongs();renderCrewCards();renderWrap();
-  renderFeed();renderRouteProgress();fetchWeather();
+    renderFeed();renderRouteProgress();fetchWeather();
     const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
     const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
     _goTo('s-home'); // bypass dirty-marking wrapper — we save explicitly above
