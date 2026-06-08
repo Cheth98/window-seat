@@ -2701,16 +2701,7 @@ function openSongForm(){toggleForm('song-form');const lbl=document.getElementByI
 function renderSongs(){
   const sl=document.getElementById('songs-list');if(!sl)return;sl.innerHTML='';
   const pbw=document.getElementById('spotify-playlist-btn-wrap');
-  if(pbw){
-    if(T.spotifyCreated){
-      const cur=T.songs.map(s=>{const m=(s.url||'').match(/track[\/:]([A-Za-z0-9]+)/);return m?m[1]:null;}).filter(Boolean);
-      const hasNew=JSON.stringify(cur)!==JSON.stringify(T.spotifyTrackIds);
-      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="updateSpotifyPlaylist()">${spotifyIcon()} ${hasNew?'Update playlist ↗':'Open in Spotify ↗'}</button>`;
-    }else if(T.songs.length>0){
-      const label=SPOTIFY_CLIENT_ID?'Create Spotify playlist':'Get all track links';
-      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="createSpotifyPlaylist()">${spotifyIcon()} ${label}</button>`;
-    }else pbw.innerHTML='';
-  }
+  if(pbw)pbw.innerHTML='';
   if(!T.songs.length){sl.innerHTML='<div style="text-align:center;color:#AFA9EC;font-size:13px;padding:20px 0;">No songs yet — add one below!</div>';return;}
   T.songs.forEach((s,i)=>{
     const m=CREW.find(x=>x.key===s.who)||CREW[0]||{name:'?',bg:'#EEEDFE',color:'#534AB7'};
@@ -2741,7 +2732,7 @@ function saveSong(){
   const pr=document.getElementById('song-link-preview');if(pr)pr.style.display='none';
   toggleForm('song-form');
   markDirty();
-  toast(T.spotifyCreated?'Added! Tap "Update playlist" to sync 🎵':'Added to soundtrack!');
+  toast('Added to soundtrack! 🎵');
   renderSongs();
 }
 function openSongModal(i){editSongIdx=i;document.getElementById('edit-song-memory').value=T.songs[i].memory||'';document.getElementById('song-edit-modal').style.display='flex';}
