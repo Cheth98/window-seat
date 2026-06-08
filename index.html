@@ -2314,7 +2314,6 @@ function savePC(){const v=(document.getElementById('new-pc')||{value:''}).value.
 function renderGameLeaderboard(){
   const el=document.getElementById('game-leaderboard');if(!el||!T)return;
   if(!CREW.length){el.innerHTML='';return;}
-  const medals=['🥇','🥈','🥉'];
   const triviaScores=(T.trivia&&T.trivia.scores)||{};
   const predictScores=(T.predict&&T.predict.scores)||{};
   const scores=CREW.map(c=>{
@@ -2330,13 +2329,13 @@ function renderGameLeaderboard(){
   }
   el.innerHTML='<div style="background:#fff;border:1px solid #EEEDFE;border-radius:16px;overflow:hidden;">'
     +scores.map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;${i<scores.length-1?'border-bottom:1px solid #F3F0FE;':''};">
-      <div style="font-size:22px;width:28px;text-align:center;">${medals[i]||'·'}</div>
+      <div style="width:28px;text-align:center;font-size:13px;font-weight:700;color:#AFA9EC;">${i+1}</div>
       <div style="width:34px;height:34px;border-radius:50%;background:${s.c.bg};border:2px solid ${s.c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(s.c,26)}</div>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:600;color:#3C3489;">${s.c.name}</div>
         <div style="font-size:11px;color:#AFA9EC;margin-top:1px;">🎯 ${s.bingo} &nbsp;📸 ${s.photo} &nbsp;🧠 ${s.trivia} &nbsp;🔮 ${s.predict}</div>
       </div>
-      <div style="font-size:20px;font-weight:700;color:${i===0?'#EF9F27':i===1?'#AFA9EC':i===2?'#CD7F32':'#534AB7'};">${s.total}</div>
+      <div style="font-size:20px;font-weight:700;color:#534AB7;">${s.total}</div>
     </div>`).join('')
     +'</div>';
 }
@@ -2498,6 +2497,12 @@ function triviaNext(){
   T.trivia={q:q.q,opts:q.opts,ans:q.ans,answers:{},revealed:false,scores,used:newUsed};
   markDirty();renderTrivia();
 }
+function triviaResetScores(){
+  if(!T.trivia)return;
+  T.trivia.scores={};
+  markDirty();renderTrivia();renderGameLeaderboard();
+  toast('Trivia scores reset!');
+}
 function renderTrivia(){
   const el=document.getElementById('trivia-card');if(!el||!T)return;
   if(!T.trivia){el.innerHTML='<div style="text-align:center;padding:40px;color:#AFA9EC;">Loading…</div>';return;}
@@ -2511,7 +2516,7 @@ function renderTrivia(){
   const lightColors=['#E8F4FD','#FBEAF0','#E8FDF0','#FEF5E7'];
 
   const scoreBar=Object.keys(scores).length?`<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
-    <div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;margin-bottom:8px;">SCORES THIS GAME</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;">SCORES THIS GAME</div><button onclick="triviaResetScores()" style="background:none;border:none;font-size:11px;color:#AFA9EC;cursor:pointer;padding:0;">Reset scores</button></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
     ${CREW.map(c=>`<div style="display:flex;align-items:center;gap:5px;background:#F7F5FF;border-radius:20px;padding:4px 10px;"><span style="font-size:12px;">${svgAv(c,16)}</span><span style="font-size:12px;font-weight:600;color:#3C3489;">${c.name.split(' ')[0]}</span><span style="font-size:13px;font-weight:700;color:#534AB7;">${scores[c.key]||0}</span></div>`).join('')}
     </div></div>`:'';
@@ -2702,7 +2707,8 @@ function renderSongs(){
       const hasNew=JSON.stringify(cur)!==JSON.stringify(T.spotifyTrackIds);
       pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="updateSpotifyPlaylist()">${spotifyIcon()} ${hasNew?'Update playlist ↗':'Open in Spotify ↗'}</button>`;
     }else if(T.songs.length>0){
-      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="createSpotifyPlaylist()">${spotifyIcon()} Create Spotify playlist</button>`;
+      const label=SPOTIFY_CLIENT_ID?'Create Spotify playlist':'Get all track links';
+      pbw.innerHTML=`<button class="add-btn green" style="margin-top:0;margin-bottom:4px;" onclick="createSpotifyPlaylist()">${spotifyIcon()} ${label}</button>`;
     }else pbw.innerHTML='';
   }
   if(!T.songs.length){sl.innerHTML='<div style="text-align:center;color:#AFA9EC;font-size:13px;padding:20px 0;">No songs yet — add one below!</div>';return;}
@@ -2852,13 +2858,33 @@ async function doUpdatePlaylist(){
 }
 function openAllInSpotify(ids){
   if(!ids.length){window.open('https://open.spotify.com','_blank');return;}
-  // spotify:trackset opens a queue of tracks in the app on mobile
-  const tracksetUri='spotify:trackset:Window Seat:'+ids.join(',');
-  const a=document.createElement('a');a.href=tracksetUri;a.target='_blank';a.rel='noopener';
-  document.body.appendChild(a);a.click();a.remove();
-  // Fallback for desktop: open first track in web player after short delay
-  setTimeout(()=>{if(ids[0])window.open('https://open.spotify.com/track/'+ids[0],'_blank');},800);
-  toast('Opening Spotify with '+ids.length+' track'+(ids.length>1?'s':'')+' 🎵');
+  // Copy all track links to clipboard so user can easily paste into a Spotify playlist
+  const links=ids.map(id=>'https://open.spotify.com/track/'+id).join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(links).then(()=>{
+      _showSpotifyCopyModal(ids,links);
+    }).catch(()=>_showSpotifyCopyModal(ids,links));
+  }else{
+    _showSpotifyCopyModal(ids,links);
+  }
+}
+function _showSpotifyCopyModal(ids,links){
+  let m=document.getElementById('spotify-copy-modal');if(m)m.remove();
+  m=document.createElement('div');m.id='spotify-copy-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(38,33,92,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:20px;';
+  m.innerHTML=`<div style="background:#FDFBFF;border-radius:20px 20px 16px 16px;padding:24px 20px;max-width:400px;width:100%;">
+    <div style="font-size:22px;text-align:center;margin-bottom:8px;">${spotifyIcon()}</div>
+    <div style="font-size:16px;font-weight:700;color:#26215C;text-align:center;margin-bottom:6px;">Add to Spotify playlist</div>
+    <div style="font-size:13px;color:#534AB7;text-align:center;margin-bottom:16px;line-height:1.5;">Creating playlists needs a Spotify developer key.<br>For now — here are all ${ids.length} track links to paste into a new playlist manually.</div>
+    <textarea readonly style="width:100%;height:100px;background:#F7F5FF;border:1.5px solid #EEEDFE;border-radius:10px;padding:10px;font-size:11px;color:#534AB7;resize:none;box-sizing:border-box;">${links}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.querySelector('#spotify-copy-modal textarea').value).then(()=>toast('Copied! 📋'))" style="flex:1;background:#1DB954;color:#fff;border:none;border-radius:20px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">Copy all links 📋</button>
+      <button onclick="document.getElementById('spotify-copy-modal').remove()" style="background:#F3F0FE;color:#534AB7;border:none;border-radius:20px;padding:11px 16px;font-size:14px;cursor:pointer;">Close</button>
+    </div>
+  </div>`;
+  m.onclick=(e)=>{if(e.target===m)m.remove();};
+  document.body.appendChild(m);
+  toast('Track links ready to copy 📋');
 }
 function createSpotifyPlaylist(){
   const token=spotifyAccessToken||sessionStorage.getItem('spotify_token');
@@ -3115,7 +3141,8 @@ function openVibePicker(){
     <div style="font-size:12px;color:#AFA9EC;margin-bottom:18px;">Your crew will see this next to your name</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px;">`
     +VIBES.map(([e,l])=>`<button onclick="setVibe('${e}')" style="background:${e===cur?'#EEEDFE':'#F7F5FF'};border:2px solid ${e===cur?'#534AB7':'transparent'};border-radius:12px;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;"><span style="font-size:24px;">${e}</span><span style="font-size:9px;color:#534AB7;font-weight:600;">${l}</span></button>`).join('')
-    +`</div><button onclick="document.getElementById('vibe-picker-overlay').remove()" style="background:none;border:none;color:#AFA9EC;font-size:13px;cursor:pointer;">cancel</button></div>`;
+    +`</div>${cur?`<button onclick="clearVibe()" style="background:#F7F5FF;border:1.5px solid #EEEDFE;border-radius:20px;padding:7px 18px;font-size:12px;color:#AFA9EC;cursor:pointer;margin-bottom:10px;">✕ Clear my vibe</button><br>`:''}
+    <button onclick="document.getElementById('vibe-picker-overlay').remove()" style="background:none;border:none;color:#AFA9EC;font-size:13px;cursor:pointer;">cancel</button></div>`;
   p.onclick=(e)=>{if(e.target===p)p.remove();};
   document.body.appendChild(p);
 }
@@ -3126,6 +3153,13 @@ function setVibe(emoji){
   renderHomeCrew();renderCrewCards();markDirty();
   addFeedEntry(emoji,selCrew.name+' is feeling <b>'+emoji+'</b>');
   toast('Vibe set to '+emoji);
+}
+function clearVibe(){
+  if(!T.vibes)T.vibes={};
+  delete T.vibes[selCrew.key];
+  const p=document.getElementById('vibe-picker-overlay');if(p)p.remove();
+  renderHomeCrew();renderCrewCards();markDirty();
+  toast('Vibe cleared');
 }
 
 // ── TRIP JOURNAL ────────────────────────────────────────────────────
@@ -3241,6 +3275,14 @@ function previewWrap(){
       <div class="stat-c" style="background:#FBEAF0;"><div class="stat-lbl">Songs</div><div class="stat-val">${T.songs.length}</div></div>
     </div>
     <p class="sec-lbl">The crew</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" id="pw-crew"></div>
+    ${(()=>{
+      const tScores=(T.trivia&&T.trivia.scores)||{};
+      const pScores=(T.predict&&T.predict.scores)||{};
+      const wrapScores=CREW.map(c=>({c,total:(T.bingo||[]).filter(b=>b.by===c.key).length+(T.photoChallenge||[]).filter(p=>p.by===c.key).length+(tScores[c.key]||0)+(pScores[c.key]||0)})).sort((a,b)=>b.total-a.total);
+      if(wrapScores.every(s=>s.total===0))return '';
+      const medals=['🥇','🥈','🥉'];
+      return `<p class="sec-lbl">🏆 Game champions</p><div style="background:#fff;border:1px solid #EEEDFE;border-radius:16px;overflow:hidden;margin-bottom:14px;">${wrapScores.map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;${i<wrapScores.length-1?'border-bottom:1px solid #F3F0FE;':''}"><div style="font-size:22px;width:28px;text-align:center;">${medals[i]||'·'}</div><div style="width:34px;height:34px;border-radius:50%;background:${s.c.bg};border:2px solid ${s.c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(s.c,26)}</div><div style="flex:1"><div style="font-size:14px;font-weight:600;color:#3C3489;">${s.c.name}</div></div><div style="font-size:20px;font-weight:700;color:${i===0?'#EF9F27':i===1?'#AFA9EC':i===2?'#CD7F32':'#534AB7'};"> ${s.total} pts</div></div>`).join('')}</div>`;
+    })()}
     ${T.albumSetupDone?`
     <p class="sec-lbl">Photo dump</p>
     <div style="background:#EEEDFE;border-radius:14px;overflow:hidden;margin-bottom:14px;">
