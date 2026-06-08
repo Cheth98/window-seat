@@ -1674,6 +1674,8 @@ function saveEditTrip(){
   trip.dateEnd=fmtDate(document.getElementById('et-date-end').value.trim())||trip.dateEnd;
   trip.emoji=(document.getElementById('et-emoji').value.trim()||trip.emoji).slice(0,2);
   closeEditTrip();
+  // If T is a stale reference to an older version of this trip object, sync it
+  if(T&&T.id===trip.id)T=trip;
   renderAppHome();
   markDirty();saveState();
   if(T&&T.id===trip.id){
@@ -3052,7 +3054,11 @@ function markDirty(){
   _dirty=true;
   // Write to Firebase within 400ms so other users see changes in real time
   clearTimeout(_fbWriteTimer);
-  _fbWriteTimer=setTimeout(()=>{if(T)fbSaveTrip(T);},400);
+  // Resolve T to the current TRIPS entry in case T is a stale reference
+  _fbWriteTimer=setTimeout(()=>{
+    const trip=T&&TRIPS.find(t=>t.id===T.id)||T;
+    if(trip)fbSaveTrip(trip);
+  },400);
 }
 
 // Auto-save every 3 seconds if anything changed
@@ -3164,40 +3170,11 @@ const restored=loadState();
 // 2. Check for invite link (may override routing)
 checkInviteParam();
 
-// 3. Route to the right screen
+// 3. Route to the right screen — always start on app home
+renderAppHome();
 if(pendingInvite){
-  // Invite link takes priority — show app home with the invite banner
-  renderAppHome();
-  goTo('s-app-home');
-}else if(restored&&restored.activeId){
-  // We have a previously active trip and crew — go straight to the trip home
-  const trip=TRIPS.find(t=>t.id===restored.activeId);
-  if(trip){
-    activateTrip(trip);
-    const key=restored.selCrewKey||trip._myCrewKey;
-    selCrew=(key&&CREW.find(c=>c.key===key))||CREW[0]||selCrew;
-    selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-    renderAppHome(); // keep app home warm in the background
-    // Render all trip screens then jump directly to trip home
-    const av=document.getElementById('home-av');if(av)av.innerHTML=svgAv(selCrew,36);
-    const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
-    const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=T.from+' → '+T.to+(T.dateStart?' · '+T.dateStart:'');
-    rebuildCatSelect();
-    renderHomeCrew();updateCountdown();renderStops();
-    renderHighlights();renderAlbumPreview();
-    renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
-    refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
-    renderSongs();renderCrewCards();renderWrap();
-    renderFeed();renderRouteProgress();fetchWeather();
-    const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
-    const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
-    _goTo('s-home'); // bypass dirty-marking wrapper — we save explicitly above
-  }else{
-    renderAppHome();_goTo('s-app-home');
-  }
+  goTo('s-app-home'); // invite banner shows inside app home
 }else{
-  // First launch — show app home
-  renderAppHome();
   _goTo('s-app-home');
 }
 
