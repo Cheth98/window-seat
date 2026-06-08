@@ -1081,14 +1081,17 @@ function renderYouAreChip(){
 
 // ── GOOGLE AUTH ────────────────────────────────────────────────────
 let _currentUser=null;
+let _authSettled=false; // true once onAuthStateChanged has fired at least once
 
 _fbAuth.onAuthStateChanged(user=>{
   _currentUser=user;
+  _authSettled=true;
   // If there's a pending auth gate waiting for sign-in, resolve it now
-  if(user&&_authGateCb){
-    const overlay=document.getElementById('auth-gate-overlay');
-    if(overlay)overlay.remove();
-    const cb=_authGateCb;_authGateCb=null;cb();
+  if(_authGateCb){
+    // Remove ALL auth gate overlays (guards against duplicate creation)
+    document.querySelectorAll('[id=auth-gate-overlay]').forEach(el=>el.remove());
+    if(user){const cb=_authGateCb;_authGateCb=null;cb();}
+    else{_authGateCb=null;} // auth resolved but user is signed out — gate stays gone, user sees they need to sign in
   }
   // When auth state resolves, auto-identify the user's crew member
   if(user&&T){
@@ -1148,6 +1151,22 @@ async function fbSignInGoogle(){
 let _authGateCb=null;
 function requireAuth(cb){
   if(_currentUser){cb();return;}
+  // If auth hasn't settled yet (first load), wait up to 3s for it before showing gate
+  if(!_authSettled){
+    let waited=false;
+    const unsub=_fbAuth.onAuthStateChanged(u=>{
+      if(waited)return; waited=true; unsub();
+      if(u){_currentUser=u;cb();}
+      else{_showAuthGate(cb);}
+    });
+    setTimeout(()=>{if(!waited){waited=true;unsub();_showAuthGate(cb);}},3000);
+    return;
+  }
+  _showAuthGate(cb);
+}
+function _showAuthGate(cb){
+  // Remove any existing gate to avoid duplicates
+  document.querySelectorAll('[id=auth-gate-overlay]').forEach(el=>el.remove());
   _authGateCb=cb;
   const overlay=document.createElement('div');
   overlay.id='auth-gate-overlay';
