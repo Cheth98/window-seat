@@ -545,6 +545,9 @@ textarea{min-height:64px;}
     <div class="game-tile" onclick="goTo('s-game-bingo')"><div class="game-tile-icon" style="background:#EEEDFE;">🎯</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Trip bingo</div><div style="font-size:12px;color:#AFA9EC;">Spot things, tick them off</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
     <div class="game-tile" onclick="goTo('s-game-dare');shuffleDare()"><div class="game-tile-icon" style="background:#FAEEDA;">🎲</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Dare spinner</div><div style="font-size:12px;color:#AFA9EC;" id="dares-count">8 dares in the pool</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
     <div class="game-tile" onclick="goTo('s-game-photo')"><div class="game-tile-icon" style="background:#E1F5EE;">📸</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Photo challenge</div><div style="font-size:12px;color:#AFA9EC;" id="pc-prog">0 / 6 completed</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="game-tile" onclick="goTo('s-game-wyr');startWYR()"><div class="game-tile-icon" style="background:#FBEAF0;">🤔</div><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Would you rather</div><div style="font-size:12px;color:#AFA9EC;">Vote &amp; see what the crew thinks</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <p class="sec-lbl" style="margin-top:18px;">🏆 Leaderboard</p>
+    <div id="game-leaderboard"></div>
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -603,6 +606,21 @@ textarea{min-height:64px;}
     <div id="photo-challenges"></div>
     <button class="add-btn" onclick="toggleForm('pc-form')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add a challenge</button>
     <div id="pc-form" style="display:none;" class="form-box"><label class="form-lbl" style="margin-top:0;">New challenge</label><input type="text" id="new-pc" placeholder="e.g. best window view shot"/><button class="primary-btn" onclick="savePC()">Add</button></div>
+  </div>
+  <div class="bnav">
+    <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="bnav-btn" onclick="goTo('s-route')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Route</button>
+    <button class="bnav-btn" onclick="goTo('s-memories')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Memories</button>
+    <button class="bnav-btn on" onclick="goTo('s-games')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg>Games</button>
+    <button class="bnav-btn" onclick="goTo('s-wrap')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 3l.7 2.3 2.3.7-2.3.7L19 9l-.7-2.3L16 6l2.3-.7z"/><path d="M5 18l.5 1.5 1.5.5-1.5.5L5 22l-.5-1.5L3 20l1.5-.5z"/></svg>Wrap</button>
+  </div>
+</div>
+
+<!-- WOULD YOU RATHER -->
+<div class="screen" id="s-game-wyr">
+  <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🤔 Would you rather</span></div>
+  <div class="scroll">
+    <div id="wyr-card"></div>
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -880,7 +898,7 @@ function makeTripData(o){
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
     spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],_dataV:3,
-    feed:[],vibes:{},journal:{},
+    feed:[],vibes:{},journal:{},wyr:null,
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -1015,7 +1033,7 @@ function fbListenToTrip(tripId){
       renderStops();renderHighlights();renderAlbumPreview();
       renderHomeCrew();renderCrewCards();renderExpenses();
       renderExpPayerBtns();renderSplitBtns();renderSongs();
-      renderWrap();renderBingo();renderDareList();renderPC();
+      renderWrap();renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
       refreshPack();renderNotifFeed();
       renderFeed();renderRouteProgress();renderJournal();
       const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
@@ -1806,7 +1824,7 @@ function _enterTrip(){
   rebuildCatSelect();
   renderHomeCrew();updateCountdown();renderStops();
   renderHighlights();renderAlbumPreview();
-  renderBingo();renderDareList();renderPC();
+  renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
   refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
   renderSongs();renderCrewCards();renderWrap();
   renderFeed();renderRouteProgress();fetchWeather();
@@ -2183,7 +2201,7 @@ function renderBingo(){
     }
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:16px;padding:0 2px;';del.textContent='×';del.title='Remove';
     del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();markDirty();};cell.appendChild(del);
-    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;addFeedEntry('🎯',selCrew.name+' spotted: <b>'+item.t+'</b>');}renderBingo();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
+    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;addFeedEntry('🎯',selCrew.name+' spotted: <b>'+item.t+'</b>');}renderBingo();renderGameLeaderboard();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
     g.appendChild(cell);
   });
   el.appendChild(g);
@@ -2213,11 +2231,129 @@ function renderPC(){
     row.innerHTML=`<div style="flex-shrink:0;">${ico}</div>`;row.appendChild(span);
     if(ch.done&&ch.by){const m=CREW.find(c=>c.key===ch.by);if(m){const av=document.createElement('div');av.style.cssText=`width:26px;height:26px;border-radius:50%;background:${m.bg};border:2px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,20);av.title=m.name;row.appendChild(av);}}
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;flex-shrink:0;';del.textContent='×';del.onclick=(e)=>{e.stopPropagation();T.photoChallenge.splice(i,1);renderPC();};row.appendChild(del);
-    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;addFeedEntry('📸',selCrew.name+' completed: <b>'+ch.text+'</b>');}renderPC();markDirty();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
+    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;addFeedEntry('📸',selCrew.name+' completed: <b>'+ch.text+'</b>');}renderPC();renderGameLeaderboard();markDirty();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
     el.appendChild(row);
   });
 }
 function savePC(){const v=(document.getElementById('new-pc')||{value:''}).value.trim();if(!v)return;T.photoChallenge.push({text:v,done:false,by:null});document.getElementById('new-pc').value='';toggleForm('pc-form');renderPC();markDirty();toast('Challenge added!');}
+
+// ── LEADERBOARD ─────────────────────────────────────────────────────
+function renderGameLeaderboard(){
+  const el=document.getElementById('game-leaderboard');if(!el||!T)return;
+  if(!CREW.length){el.innerHTML='';return;}
+  const medals=['🥇','🥈','🥉'];
+  const scores=CREW.map(c=>{
+    const bingo=(T.bingo||[]).filter(b=>b.by===c.key).length;
+    const photo=(T.photoChallenge||[]).filter(p=>p.by===c.key).length;
+    return {c,bingo,photo,total:bingo+photo};
+  }).sort((a,b)=>b.total-a.total);
+  if(scores.every(s=>s.total===0)){
+    el.innerHTML='<div style="text-align:center;color:#AFA9EC;font-size:13px;padding:16px 0;">No scores yet — start playing!</div>';
+    return;
+  }
+  el.innerHTML='<div style="background:#fff;border:1px solid #EEEDFE;border-radius:16px;overflow:hidden;">'
+    +scores.map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;${i<scores.length-1?'border-bottom:1px solid #F3F0FE;':''};">
+      <div style="font-size:22px;width:28px;text-align:center;">${medals[i]||'·'}</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:${s.c.bg};border:2px solid ${s.c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(s.c,26)}</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;color:#3C3489;">${s.c.name}</div>
+        <div style="font-size:11px;color:#AFA9EC;margin-top:1px;">🎯 ${s.bingo} bingo &nbsp;📸 ${s.photo} photo</div>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:${i===0?'#EF9F27':i===1?'#AFA9EC':i===2?'#CD7F32':'#534AB7'};">${s.total}</div>
+    </div>`).join('')
+    +'</div>';
+}
+
+// ── WOULD YOU RATHER ────────────────────────────────────────────────
+const WYR_POOL=[
+  {a:'Drive the whole trip',b:'Be stuck in the back middle seat'},
+  {a:'Only eat highway dhabas',b:'Only eat at fancy restaurants'},
+  {a:'Get lost for 2 hours',b:'Hit 2 hours of traffic jams'},
+  {a:'No music the entire trip',b:'Only play one song on repeat'},
+  {a:'Car breaks down in the middle of nowhere',b:'Flat tyre on a highway'},
+  {a:'Navigate without Google Maps',b:'Drive without AC in peak summer'},
+  {a:'Stop at every roadside stall',b:'Drive non-stop with no breaks'},
+  {a:'Listen to someone\'s playlist you hate',b:'Sit in silence for 3 hours'},
+  {a:'Take a 6 AM start',b:'Drive through the night'},
+  {a:'Get a speeding ticket',b:'Get stuck behind a slow tractor for an hour'},
+  {a:'Forget your charger',b:'Forget your wallet'},
+  {a:'Sunrise at a viewpoint',b:'Stargazing at a campfire'},
+];
+
+function startWYR(){
+  if(!T.wyr){
+    const q=WYR_POOL[Math.floor(Math.random()*WYR_POOL.length)];
+    T.wyr={a:q.a,b:q.b,votes:{},revealed:false,used:[WYR_POOL.indexOf(q)]};
+    markDirty();
+  }
+  renderWYR();
+}
+
+function wyrVote(choice){
+  if(!T.wyr)return;
+  if(T.wyr.revealed){toast('Round already revealed! Start a new one.');return;}
+  T.wyr.votes[selCrew.key]=choice;
+  markDirty();renderWYR();
+  const total=Object.keys(T.wyr.votes).length;
+  if(total>=CREW.length){
+    setTimeout(()=>{if(T.wyr&&!T.wyr.revealed){T.wyr.revealed=true;markDirty();renderWYR();}},600);
+  }
+}
+
+function wyrNext(){
+  if(!T.wyr)return;
+  const used=T.wyr.used||[];
+  const remaining=WYR_POOL.map((_,i)=>i).filter(i=>!used.includes(i));
+  const pool=remaining.length?remaining:WYR_POOL.map((_,i)=>i);
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  const q=WYR_POOL[idx];
+  const newUsed=[...used,idx].slice(-WYR_POOL.length);
+  T.wyr={a:q.a,b:q.b,votes:{},revealed:false,used:newUsed};
+  markDirty();renderWYR();
+}
+
+function renderWYR(){
+  const el=document.getElementById('wyr-card');if(!el||!T)return;
+  if(!T.wyr){el.innerHTML='<div style="text-align:center;padding:40px;color:#AFA9EC;">Loading…</div>';return;}
+  const {a,b,votes,revealed}=T.wyr;
+  const myVote=votes[selCrew.key];
+  const totalVotes=Object.keys(votes).length;
+  const aVoters=CREW.filter(c=>votes[c.key]==='A');
+  const bVoters=CREW.filter(c=>votes[c.key]==='B');
+  const aPct=totalVotes?Math.round(aVoters.length/totalVotes*100):50;
+  const bPct=totalVotes?Math.round(bVoters.length/totalVotes*100):50;
+
+  const voterAvatars=(voters)=>voters.map(c=>`<div title="${c.name}" style="width:24px;height:24px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:inline-flex;align-items:center;justify-content:center;margin-left:-4px;">${svgAv(c,18)}</div>`).join('');
+
+  const btnStyle=(side)=>{
+    const chosen=myVote===side;
+    const other=myVote&&myVote!==side;
+    return `width:100%;border:2px solid ${chosen?'#534AB7':other?'#EEEDFE':'#CECBF6'};background:${chosen?'#EEEDFE':'#fff'};border-radius:16px;padding:18px 16px;cursor:pointer;text-align:left;transition:all .15s;opacity:${other?'.55':'1'};`;
+  };
+
+  el.innerHTML=`
+    <div style="background:#F7F5FF;border-radius:20px;padding:22px 16px;margin-top:8px;text-align:center;border:1px solid #EEEDFE;">
+      <div style="font-size:30px;margin-bottom:6px;">🤔</div>
+      <div style="font-size:13px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;">Would you rather…</div>
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+      <button onclick="wyrVote('A')" style="${btnStyle('A')}">
+        <div style="font-size:11px;font-weight:700;color:#534AB7;margin-bottom:4px;">OPTION A</div>
+        <div style="font-size:15px;font-weight:600;color:#26215C;line-height:1.4;">${a}</div>
+        ${revealed?`<div style="margin-top:10px;"><div style="height:6px;background:#EEEDFE;border-radius:4px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:${aPct}%;background:#534AB7;border-radius:4px;transition:width .4s;"></div></div><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;">${voterAvatars(aVoters)}</div><span style="font-size:12px;font-weight:700;color:#534AB7;">${aPct}%</span></div></div>`:''}
+      </button>
+      <button onclick="wyrVote('B')" style="${btnStyle('B')}">
+        <div style="font-size:11px;font-weight:700;color:#D4537E;margin-bottom:4px;">OPTION B</div>
+        <div style="font-size:15px;font-weight:600;color:#26215C;line-height:1.4;">${b}</div>
+        ${revealed?`<div style="margin-top:10px;"><div style="height:6px;background:#FBEAF0;border-radius:4px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:${bPct}%;background:#D4537E;border-radius:4px;transition:width .4s;"></div></div><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;">${voterAvatars(bVoters)}</div><span style="font-size:12px;font-weight:700;color:#D4537E;">${bPct}%</span></div></div>`:''}
+      </button>
+    </div>
+    <div style="margin-top:14px;text-align:center;">
+      ${!myVote?'<div style="font-size:12px;color:#AFA9EC;">Tap to vote — results reveal when everyone answers</div>':''}
+      ${myVote&&!revealed?`<div style="font-size:12px;color:#AFA9EC;">${CREW.length-totalVotes>0?`Waiting for ${CREW.length-totalVotes} more…`:'Revealing soon…'}</div>`:''}
+      ${revealed?`<button onclick="wyrNext()" style="background:#534AB7;color:#fff;border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;">Next question →</button>`:''}
+    </div>`;
+}
 
 // ── PACKING ────────────────────────────────────────────────────────
 function refreshPack(){
@@ -2861,7 +2997,7 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}if(id==='s-games')renderGameLeaderboard();if(id==='s-game-wyr')renderWYR();}
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
 // Everything lives in localStorage under 'ws_state'.
@@ -3020,7 +3156,7 @@ if(pendingInvite){
     rebuildCatSelect();
     renderHomeCrew();updateCountdown();renderStops();
     renderHighlights();renderAlbumPreview();
-    renderBingo();renderDareList();renderPC();
+    renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();
     refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
     renderSongs();renderCrewCards();renderWrap();
     renderFeed();renderRouteProgress();fetchWeather();
