@@ -1648,7 +1648,7 @@ function saveEditTrip(){
   trip.emoji=(document.getElementById('et-emoji').value.trim()||trip.emoji).slice(0,2);
   closeEditTrip();
   renderAppHome();
-  markDirty();
+  markDirty();saveState();
   if(T&&T.id===trip.id){
     const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=trip.name;
     const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
