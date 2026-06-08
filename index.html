@@ -1015,6 +1015,8 @@ function fbListenToTrip(tripId){
     const needsMigration=(remote._dataV||0)<3;
     // Merge remote on top of local defaults so new fields always have values
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
+    // Pin seed trip dates — Firebase may have stale/corrupted values
+    if(tripId===SEED_ID){TRIPS[idx].dateStart='June 20, 2026';TRIPS[idx].dateEnd='June 21, 2026';}
     // ── Data migration v2: clear default songs that shipped with the app ──
     if(needsMigration){
       TRIPS[idx].songs=[];
@@ -1714,11 +1716,16 @@ function fmtDate(val){
 }
 function dateToISO(val){
   // Convert "Month DD, YYYY" back to YYYY-MM-DD for date input
+  // Parse manually to avoid timezone shifts (new Date() can roll back a day in UTC+)
   if(!val)return '';
   if(val.match(/^\d{4}-\d{2}-\d{2}$/))return val;
-  const d=new Date(val);
-  if(isNaN(d))return '';
-  return d.toISOString().slice(0,10);
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const m=val.match(/^(\w+)\s+(\d{1,2}),?\s+(\d{4})$/);
+  if(m){
+    const mi=months.indexOf(m[1]);
+    if(mi>=0)return m[3]+'-'+String(mi+1).padStart(2,'0')+'-'+String(parseInt(m[2],10)).padStart(2,'0');
+  }
+  return '';
 }
 function createTripStep(n){
   if(n===2){
@@ -3054,10 +3061,12 @@ function loadState(){
         // but always reset highlights & pack to the fresh seed values so
         // removing defaults takes effect even for returning users.
         const merged=Object.assign({},freshSeed,savedTrip);
-        // Reset highlights, pack, and songs/spotify to fresh (empty)
+        // Reset highlights, pack, songs/spotify, and dates to fresh seed values
         merged.highlights=freshSeed.highlights;
         merged.pack=freshSeed.pack;
         merged.songs=freshSeed.songs; // always []
+        merged.dateStart=freshSeed.dateStart; // pin June 20, 2026
+        merged.dateEnd=freshSeed.dateEnd;     // pin June 21, 2026
         merged.spotifyCreated=false;
         merged.spotifyTrackIds=[];
         merged.spotifyPlaylistId=null;
