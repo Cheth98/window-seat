@@ -2326,6 +2326,7 @@ function startWYR(){
 function wyrVote(choice){
   if(!T.wyr)return;
   if(T.wyr.revealed){toast('Round already revealed! Start a new one.');return;}
+  if(!T.wyr.votes)T.wyr.votes={};
   T.wyr.votes[selCrew.key]=choice;
   markDirty();renderWYR();
   const total=Object.keys(T.wyr.votes).length;
@@ -2348,7 +2349,8 @@ function wyrNext(){
 function renderWYR(){
   const el=document.getElementById('wyr-card');if(!el||!T)return;
   if(!T.wyr){el.innerHTML='<div style="text-align:center;padding:40px;color:#AFA9EC;">Loading…</div>';return;}
-  const {a,b,votes,revealed}=T.wyr;
+  const {a,b,revealed}=T.wyr;
+  const votes=T.wyr.votes||{};
   const myVote=votes[selCrew.key];
   const totalVotes=Object.keys(votes).length;
   const aVoters=CREW.filter(c=>votes[c.key]==='A');
