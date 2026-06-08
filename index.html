@@ -2656,7 +2656,7 @@ function renderFeed(){
   const el=document.getElementById('activity-feed-wrap');if(!el)return;
   if(!T.feed||!T.feed.length){el.innerHTML='';return;}
   const entries=T.feed.slice(0,8);
-  el.innerHTML='<p class="sec-lbl" style="margin-top:0;margin-bottom:6px;">What's happening</p>'
+  el.innerHTML='<p class="sec-lbl" style="margin-top:0;margin-bottom:6px;">What\'s happening</p>'
     +'<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:4px 12px;">'
     +entries.map(e=>`<div class="feed-entry"><div class="feed-icon">${e.icon}</div><div class="feed-msg">${e.msg}</div><div class="feed-time">${timeAgo(e.ts)}</div></div>`).join('')
     +'</div>';
