@@ -72,6 +72,14 @@ const _googleProvider=new firebase.auth.GoogleAuthProvider();
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+.feed-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #F3F0FE;}
+.feed-entry:last-child{border-bottom:none;}
+.feed-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center;margin-top:1px;}
+.feed-msg{font-size:12px;color:#3C3489;flex:1;line-height:1.4;}
+.feed-time{font-size:10px;color:#CECBF6;flex-shrink:0;padding-top:2px;}
+.journal-card{background:#fff;border:1px solid #EEEDFE;border-radius:12px;padding:12px;margin-bottom:8px;}
+.journal-mine{border:1.5px solid #7F77DD;background:#FDFBFF;}
+
 html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F0EEFB;overscroll-behavior-y:none;}
 .app-shell{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px;}
 .app{width:100%;max-width:420px;margin:0 auto;background:#FDFBFF;border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(83,74,183,.15);}
@@ -427,6 +435,7 @@ textarea{min-height:64px;}
       <div style="font-size:15px;font-weight:700;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
         <div style="font-size:11px;color:#534AB7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-sub"></div>
+        <span id="weather-chip" style="display:none;font-size:10px;color:#534AB7;background:#EEEDFE;border-radius:10px;padding:2px 7px;white-space:nowrap;flex-shrink:0;"></span>
         <div id="sync-status" style="display:none;"></div>
       </div>
     </div>
@@ -450,8 +459,10 @@ textarea{min-height:64px;}
       <div class="stat-c" style="background:#FBEAF0;"><div class="stat-lbl">Days</div><div class="stat-val" id="home-days">2</div></div>
     </div>
     <p class="sec-lbl">The crew</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" id="home-crew-badges"></div>
-    <p class="sec-lbl">Quick links</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="home-crew-badges"></div>
+    <div id="route-progress"></div>
+    <div id="activity-feed-wrap"></div>
+    <p class="sec-lbl" style="margin-top:2px;">Quick links</p>
     <div class="card" style="cursor:pointer;" onclick="goTo('s-route')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Route &amp; stops</div><div style="font-size:12px;color:#AFA9EC;" id="home-stops-sub">6 stops</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
     <div class="card" style="cursor:pointer;" onclick="goTo('s-memories')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Memories &amp; photos</div><div style="font-size:12px;color:#AFA9EC;">Photos &amp; highlights</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
     <div class="card" style="cursor:pointer;" onclick="goTo('s-games')"><div style="display:flex;align-items:center;gap:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 1M14 4l-1 2M18 9l-2 1M8 2l1 2M20 14l-2-1M6 18l1-2M2 10l2 1M12 20l1-2"/><path d="M15 3s-4 3-3 8c1 4 6 5 6 5"/><path d="M9 21s4-3 3-8c-1-4-6-5-6-5"/></svg><div><div style="font-size:15px;font-weight:500;color:#3C3489;">Road trip games</div><div style="font-size:12px;color:#AFA9EC;">Bingo, dares &amp; challenges</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg></div></div>
@@ -516,6 +527,9 @@ textarea{min-height:64px;}
       <input type="text" id="new-highlight" placeholder="What was the best moment?" style="flex:1;"/>
       <button class="primary-btn" style="width:auto;padding:10px 16px;margin-top:0;" onclick="saveHighlight()">Add</button>
     </div>
+    <p class="sec-lbl" style="margin-top:18px;">Trip journal</p>
+    <div style="font-size:12px;color:#AFA9EC;margin-bottom:10px;">Your own note from this trip — only you can edit it.</div>
+    <div id="journal-section"></div>
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -869,6 +883,7 @@ function makeTripData(o){
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
     spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],_dataV:3,
+    feed:[],vibes:{},journal:{},
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -947,10 +962,10 @@ let splitKeys=CREW.map(c=>c.key);
 let editSongIdx=-1;
 
 const STATUS_META={
-  upcoming:{cls:'p-blue',lbl:'Upcoming'},
-  'en-route':{cls:'p-orange',lbl:'En route'},
-  here:{cls:'p-amber',lbl:'Here now'},
-  done:{cls:'p-green',lbl:'Done'},
+  upcoming:{cls:'p-blue',lbl:'Upcoming',icon:'🔵'},
+  'en-route':{cls:'p-orange',lbl:'En route',icon:'🚗'},
+  here:{cls:'p-amber',lbl:'Here now',icon:'📍'},
+  done:{cls:'p-green',lbl:'Done',icon:'✅'},
 };
 
 // Switch which trip is active — load its data into working variables
@@ -1005,6 +1020,7 @@ function fbListenToTrip(tripId){
       renderExpPayerBtns();renderSplitBtns();renderSongs();
       renderWrap();renderBingo();renderDareList();renderPC();
       refreshPack();renderNotifFeed();
+      renderFeed();renderRouteProgress();renderJournal();
       const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
     }
     renderAppHome();
@@ -1796,6 +1812,7 @@ function _enterTrip(){
   renderBingo();renderDareList();renderPC();
   refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
   renderSongs();renderCrewCards();renderWrap();
+  renderFeed();renderRouteProgress();fetchWeather();
   const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
   const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
   // Days = difference between start and end date, or 1 if same
@@ -1813,7 +1830,15 @@ function _enterTrip(){
 // ── HOME ───────────────────────────────────────────────────────────
 function renderHomeCrew(){
   const el=document.getElementById('home-crew-badges');if(!el)return;el.innerHTML='';
-  CREW.forEach(c=>{const b=document.createElement('span');b.className='pill';b.style.cssText=`background:${c.bg};color:${c.color};display:inline-flex;align-items:center;gap:4px;`;b.innerHTML=svgAv(c,14)+'&nbsp;'+c.name;el.appendChild(b);});
+  CREW.forEach(c=>{
+    const isMe=c.key===selCrew.key;
+    const vibe=(T.vibes&&T.vibes[c.key])?T.vibes[c.key].emoji:'';
+    const b=document.createElement('span');b.className='pill';
+    b.style.cssText=`background:${c.bg};color:${c.color};display:inline-flex;align-items:center;gap:4px;cursor:${isMe?'pointer':'default'};`;
+    b.innerHTML=svgAv(c,14)+'&nbsp;'+c.name+(vibe?'&nbsp;<span style="font-size:13px;">'+vibe+'</span>':'');
+    if(isMe){b.title='Tap to set your vibe';b.onclick=openVibePicker;}
+    el.appendChild(b);
+  });
   renderYouAreChip();
 }
 
@@ -1858,7 +1883,8 @@ function cycleStop(i){
   stops[i].status=next;
   if(next==='done'&&i+1<stops.length&&stops[i+1].status==='upcoming')stops[i+1].status='en-route';
   pushNotif(selCrew.name+' marked "'+stops[i].name.split(',')[0]+'" as '+STATUS_META[next].lbl);
-  renderStops();markDirty();toast('Marked: '+STATUS_META[next].lbl);
+  addFeedEntry(STATUS_META[next].icon||'🗺',selCrew.name+' marked <b>'+stops[i].name.split(',')[0]+'</b> as '+STATUS_META[next].lbl);
+  renderStops();renderRouteProgress();markDirty();toast('Marked: '+STATUS_META[next].lbl);
 }
 let dragIdx=null;
 function renderStops(){
@@ -1948,6 +1974,7 @@ async function shareRecap(){
 function saveHighlight(){
   const v=(document.getElementById('new-highlight')||{value:''}).value.trim();if(!v)return;
   T.highlights.push(v);document.getElementById('new-highlight').value='';
+  addFeedEntry('✨',selCrew.name+' added a highlight: <b>'+v+'</b>');
   renderHighlights();markDirty();toast('Highlight saved!');
 }
 
@@ -2159,7 +2186,7 @@ function renderBingo(){
     }
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:16px;padding:0 2px;';del.textContent='×';del.title='Remove';
     del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();markDirty();};cell.appendChild(del);
-    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;}renderBingo();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
+    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;addFeedEntry('🎯',selCrew.name+' spotted: <b>'+item.t+'</b>');}renderBingo();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
     g.appendChild(cell);
   });
   el.appendChild(g);
@@ -2189,7 +2216,7 @@ function renderPC(){
     row.innerHTML=`<div style="flex-shrink:0;">${ico}</div>`;row.appendChild(span);
     if(ch.done&&ch.by){const m=CREW.find(c=>c.key===ch.by);if(m){const av=document.createElement('div');av.style.cssText=`width:26px;height:26px;border-radius:50%;background:${m.bg};border:2px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,20);av.title=m.name;row.appendChild(av);}}
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;flex-shrink:0;';del.textContent='×';del.onclick=(e)=>{e.stopPropagation();T.photoChallenge.splice(i,1);renderPC();};row.appendChild(del);
-    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;}renderPC();markDirty();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
+    row.onclick=()=>{if(ch.done){ch.done=false;ch.by=null;}else{ch.done=true;ch.by=selCrew.key;addFeedEntry('📸',selCrew.name+' completed: <b>'+ch.text+'</b>');}renderPC();markDirty();if(ch.done)toast(selCrew.name+' completed: '+ch.text+' 📸');};
     el.appendChild(row);
   });
 }
@@ -2494,6 +2521,7 @@ function saveExp(){
   const amt=safeEval(rawAmt)||parseFloat(rawAmt);
   if(!desc||!amt)return;
   T.expenses.push({desc,amount:amt,payer:selPayer.key,split:[...splitKeys]});
+  addFeedEntry('💰',selPayer.name+' paid <b>₹'+amt+'</b> for '+desc);
   ['new-exp-desc','new-exp-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const p=document.getElementById('exp-amt-preview');if(p)p.textContent='';
   toggleForm('exp-form');renderExpenses();renderSplitBtns();markDirty();toast('Expense added!');
@@ -2608,6 +2636,145 @@ function saveProfileEdit(){
   toast('Profile updated! ✓');
 }
 
+// ── ACTIVITY FEED ──────────────────────────────────────────────────
+function timeAgo(ts){
+  if(!ts)return'';
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return'just now';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+function addFeedEntry(icon,msg){
+  if(!T||!T.id)return;
+  if(!T.feed)T.feed=[];
+  T.feed.unshift({icon,msg,ts:Date.now()});
+  if(T.feed.length>50)T.feed.length=50;
+  renderFeed();markDirty();
+}
+function renderFeed(){
+  const el=document.getElementById('activity-feed-wrap');if(!el)return;
+  if(!T.feed||!T.feed.length){el.innerHTML='';return;}
+  const entries=T.feed.slice(0,8);
+  el.innerHTML='<p class="sec-lbl" style="margin-top:0;margin-bottom:6px;">What's happening</p>'
+    +'<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:4px 12px;">'
+    +entries.map(e=>`<div class="feed-entry"><div class="feed-icon">${e.icon}</div><div class="feed-msg">${e.msg}</div><div class="feed-time">${timeAgo(e.ts)}</div></div>`).join('')
+    +'</div>';
+}
+
+// ── ROUTE PROGRESS ──────────────────────────────────────────────────
+function renderRouteProgress(){
+  const el=document.getElementById('route-progress');if(!el||!T.stops||!T.stops.length)return;
+  const done=T.stops.filter(s=>s.status==='done').length;
+  const active=T.stops.find(s=>s.status==='here'||s.status==='en-route');
+  if(!done&&!active){el.innerHTML='';return;}
+  let dots='';
+  T.stops.forEach((s,i)=>{
+    const isDone=s.status==='done';
+    const isActive=s.status==='here'||s.status==='en-route';
+    const prevDone=i>0&&T.stops[i-1].status==='done';
+    if(i>0)dots+=`<div style="flex:1;height:2px;background:${prevDone?'#534AB7':'#EEEDFE'};margin:0 1px;"></div>`;
+    dots+=`<div title="${s.name}" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;background:${isDone?'#534AB7':isActive?'#1D9E75':'#EEEDFE'};border:${isActive?'2px solid #1D9E75':'none'};${isActive?'box-shadow:0 0 0 3px rgba(29,158,117,.18);':''}"></div>`;
+  });
+  el.innerHTML=`<div style="margin-bottom:12px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;"><span style="font-size:11px;font-weight:600;color:#AFA9EC;letter-spacing:.07em;text-transform:uppercase;">Journey progress</span><span style="font-size:11px;color:#534AB7;font-weight:600;">${done}/${T.stops.length} stops</span></div><div style="display:flex;align-items:center;">${dots}</div></div>`;
+}
+
+// ── VIBE CHECK-IN ───────────────────────────────────────────────────
+const VIBES=[['😴','Tired'],['🙂','Good'],['🔥','Hyped'],['🤪','Chaotic'],['😂','Lol']];
+function openVibePicker(){
+  let p=document.getElementById('vibe-picker-overlay');
+  if(p){p.remove();return;}
+  const cur=T.vibes&&T.vibes[selCrew.key]?T.vibes[selCrew.key].emoji:'';
+  p=document.createElement('div');p.id='vibe-picker-overlay';
+  p.style.cssText='position:fixed;inset:0;background:rgba(38,33,92,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  p.innerHTML=`<div style="background:#FDFBFF;border-radius:20px;padding:24px 20px;max-width:300px;width:100%;text-align:center;">
+    <div style="font-size:16px;font-weight:700;color:#26215C;margin-bottom:4px;">How\'s the vibe?</div>
+    <div style="font-size:12px;color:#AFA9EC;margin-bottom:18px;">Your crew will see this next to your name</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px;">`
+    +VIBES.map(([e,l])=>`<button onclick="setVibe('${e}')" style="background:${e===cur?'#EEEDFE':'#F7F5FF'};border:2px solid ${e===cur?'#534AB7':'transparent'};border-radius:12px;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;"><span style="font-size:24px;">${e}</span><span style="font-size:9px;color:#534AB7;font-weight:600;">${l}</span></button>`).join('')
+    +`</div><button onclick="document.getElementById('vibe-picker-overlay').remove()" style="background:none;border:none;color:#AFA9EC;font-size:13px;cursor:pointer;">cancel</button></div>`;
+  p.onclick=(e)=>{if(e.target===p)p.remove();};
+  document.body.appendChild(p);
+}
+function setVibe(emoji){
+  if(!T.vibes)T.vibes={};
+  T.vibes[selCrew.key]={emoji,ts:Date.now()};
+  const p=document.getElementById('vibe-picker-overlay');if(p)p.remove();
+  renderHomeCrew();renderCrewCards();markDirty();
+  addFeedEntry(emoji,selCrew.name+' is feeling <b>'+emoji+'</b>');
+  toast('Vibe set to '+emoji);
+}
+
+// ── TRIP JOURNAL ────────────────────────────────────────────────────
+function renderJournal(){
+  const el=document.getElementById('journal-section');if(!el)return;
+  if(!T.journal)T.journal={};
+  el.innerHTML='';
+  const mine=T.journal[selCrew.key]||{text:'',ts:0};
+  const myCard=document.createElement('div');myCard.className='journal-card journal-mine';
+  myCard.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <div style="width:30px;height:30px;border-radius:50%;background:${selCrew.bg};border:2px solid ${selCrew.color};display:flex;align-items:center;justify-content:center;">${svgAv(selCrew,22)}</div>
+    <div><div style="font-size:13px;font-weight:600;color:#3C3489;">${selCrew.name} <span style="font-size:11px;font-weight:400;color:#AFA9EC;">(you)</span></div>${mine.ts?`<div style="font-size:10px;color:#CECBF6;">Last updated ${timeAgo(mine.ts)}</div>`:''}</div>
+  </div>
+  <textarea id="my-journal-text" rows="4" placeholder="Write something you'll want to remember… 📝" style="width:100%;border:1px solid #EEEDFE;border-radius:10px;padding:10px;font-size:13px;color:#3C3489;line-height:1.6;resize:none;background:#FDFBFF;font-family:inherit;">${mine.text||''}</textarea>
+  <button class="primary-btn" onclick="saveJournal()" style="margin-top:10px;padding:9px 20px;font-size:13px;">Save note</button>`;
+  el.appendChild(myCard);
+  CREW.filter(c=>c.key!==selCrew.key).forEach(c=>{
+    const entry=T.journal[c.key];
+    if(!entry||!entry.text)return;
+    const card=document.createElement('div');card.className='journal-card';
+    card.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,20)}</div>
+      <div style="font-size:13px;font-weight:600;color:#3C3489;flex:1;">${c.name}</div>
+      ${entry.ts?`<div style="font-size:10px;color:#CECBF6;">${timeAgo(entry.ts)}</div>`:''}
+    </div>
+    <div style="font-size:13px;color:#534AB7;line-height:1.6;font-style:italic;">"${entry.text}"</div>`;
+    el.appendChild(card);
+  });
+}
+function saveJournal(){
+  const ta=document.getElementById('my-journal-text');if(!ta)return;
+  const text=ta.value.trim();
+  if(!T.journal)T.journal={};
+  T.journal[selCrew.key]={text,ts:Date.now()};
+  markDirty();toast('Note saved ✓');renderJournal();
+}
+
+// ── WEATHER ─────────────────────────────────────────────────────────
+let _wxCache={city:'',data:null,ts:0};
+const _WX_ICONS={'sunny':'☀️','clear':'🌙','partly':'⛅','cloud':'☁️','overcast':'☁️',
+  'mist':'🌫️','fog':'🌫️','haze':'🌫️','drizzle':'🌦️','light rain':'🌦️',
+  'rain':'🌧️','thunder':'⛈️','snow':'❄️','blizzard':'❄️'};
+function _wxIcon(desc){
+  const d=desc.toLowerCase();
+  return Object.entries(_WX_ICONS).find(([k])=>d.includes(k))?.[1]||'🌡️';
+}
+async function fetchWeather(){
+  const el=document.getElementById('weather-chip');if(!el)return;
+  const city=(T.to||'').replace(/[^a-zA-Z\s]/g,'').trim();
+  if(!city){el.style.display='none';return;}
+  if(_wxCache.city===city&&_wxCache.data&&Date.now()-_wxCache.ts<1800000){
+    _applyWeather(_wxCache.data,el);return;
+  }
+  try{
+    const ac=new AbortController();const t=setTimeout(()=>ac.abort(),5000);
+    const r=await fetch('https://wttr.in/'+encodeURIComponent(city)+'?format=j1',{signal:ac.signal});
+    clearTimeout(t);if(!r.ok)throw new Error();
+    const d=await r.json();
+    _wxCache={city,data:d,ts:Date.now()};_applyWeather(d,el);
+  }catch(e){el.style.display='none';}
+}
+function _applyWeather(d,el){
+  try{
+    const cc=d.current_condition[0];
+    const desc=cc.weatherDesc[0].value;
+    const temp=cc.temp_C;
+    el.style.display='inline-flex';
+    el.textContent=_wxIcon(desc)+' '+temp+'°C';
+    el.title=desc+' in '+(T.to||'');
+  }catch(e){el.style.display='none';}
+}
+
 // ── WRAP ───────────────────────────────────────────────────────────
 function renderWrap(){
   const el=document.getElementById('wrap-content');if(!el)return;
@@ -2661,6 +2828,13 @@ function previewWrap(){
     ${T.highlights.slice(0,4).map(h=>`<div class="hl-card"><span class="hl-text">${h}</span></div>`).join('')||'<div style="font-size:13px;color:#AFA9EC;padding:8px 0;">No highlights yet</div>'}
     <p class="sec-lbl" style="margin-top:14px;">Trip soundtrack</p>
     <div class="note-card"><div class="note-text" style="color:#534AB7;line-height:1.8;">${T.songs.length?T.songs.map(s=>'🎵 '+s.name).join('<br>'):'No songs yet'}</div></div>
+    ${Object.keys(T.journal||{}).some(k=>T.journal[k]&&T.journal[k].text)?`
+    <p class="sec-lbl" style="margin-top:14px;">Journal entries</p>
+    ${CREW.filter(c=>T.journal[c.key]&&T.journal[c.key].text).map(c=>`
+      <div style="background:#F7F5FF;border-radius:12px;padding:12px;margin-bottom:8px;border-left:3px solid ${c.color};">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">${svgAv(c,16)}<span style="font-size:12px;font-weight:600;color:${c.color};">${c.name}</span></div>
+        <div style="font-size:13px;color:#3C3489;line-height:1.6;font-style:italic;">"${T.journal[c.key].text}"</div>
+      </div>`).join('')}`:''}
     <div style="text-align:center;padding:24px 0 10px;font-size:15px;color:#534AB7;font-style:italic;">The kind of trip you'll still talk about in 10 years.</div>`;
   el.appendChild(sc);
   if(T.albumSetupDone){
@@ -2698,7 +2872,7 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}}
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
 // Everything lives in localStorage under 'ws_state'.
@@ -2860,6 +3034,7 @@ if(pendingInvite){
     renderBingo();renderDareList();renderPC();
     refreshPack();renderExpenses();renderExpPayerBtns();renderSplitBtns();
     renderSongs();renderCrewCards();renderWrap();
+  renderFeed();renderRouteProgress();fetchWeather();
     const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
     const dd=document.getElementById('home-dist');if(dd)dd.textContent=T.dist||'--';
     _goTo('s-home'); // bypass dirty-marking wrapper — we save explicitly above
