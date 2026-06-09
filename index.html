@@ -81,8 +81,8 @@ const _googleProvider=new firebase.auth.GoogleAuthProvider();
 [data-dark]{
   --bg:#0F0D1E;--app:#161429;--card:#1E1B36;--tint:#231F3E;
   --pale:#2A2650;--faint:#191730;--bd:#2D2950;--bdm:#3C3870;
-  --th:#E4E1FF;--tb:#C4C0F5;--tm:#7370AA;--tf:#453F70;
-  --acc:#8B83E8;--accb:#9D96F0;--top:#161429;
+  --th:#F0EEFF;--tb:#D8D4FF;--tm:#9A97CC;--tf:#5C5890;
+  --acc:#9D96F0;--accb:#B0ABFF;--top:#161429;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 .feed-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center;margin-top:1px;}
@@ -197,11 +197,14 @@ textarea{min-height:64px;}
 @keyframes wxSunPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,195,0,.4)}60%{box-shadow:0 0 10px 3px rgba(255,195,0,.15)}}
 @keyframes wxRainWave{0%,100%{background:#DBEEFF;color:#185FA5;}50%{background:#C5E3FF;color:#0D4A9E;}}
 @keyframes wxThunder{0%,100%{background:#EEE5FF;}50%{background:#DDD0FF;}}
+@keyframes wxCloudDrift{0%,100%{opacity:1;transform:translateX(0)}50%{opacity:.75;transform:translateX(3px)}}
+@keyframes wxMistFade{0%,100%{opacity:1}50%{opacity:.6}}
 #weather-chip{transition:background .3s,box-shadow .3s;}
 .wx-sunny{animation:wxSunPulse 2.5s infinite;background:#FFF3CD!important;color:#865C00!important;}
 .wx-rain{animation:wxRainWave 2.5s ease-in-out infinite;}
 .wx-thunder{animation:wxThunder 1.5s ease-in-out infinite;}
-.wx-mist{background:#E8E8E8!important;color:#555!important;}
+.wx-cloud{animation:wxCloudDrift 3s ease-in-out infinite;background:#EAEBEE!important;color:#555!important;}
+.wx-mist{animation:wxMistFade 2.5s ease-in-out infinite;background:#E8E8E8!important;color:#666!important;}
 /* ── BINGO GRID ────────────────────────────────────────────── */
 .bingo-grid{display:grid;gap:6px;}
 .bingo-cell{border-radius:10px;padding:10px 8px;cursor:pointer;border:1.5px solid var(--bd);background:var(--card);color:var(--tb);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;min-height:70px;transition:all .15s;font-size:12px;line-height:1.3;position:relative;}
@@ -777,7 +780,6 @@ textarea{min-height:64px;}
       <div class="stat-c" style="background:#FAEEDA;"><div class="stat-lbl">Total spent</div><div class="stat-val" id="exp-total">₹0</div></div>
       <div class="stat-c" style="background:#E1F5EE;"><div class="stat-lbl">Your share</div><div class="stat-val" id="exp-per">₹0</div></div>
     </div>
-    <div id="exp-split-bar"></div>
     <p class="sec-lbl">What you owe &amp; are owed</p>
     <div id="exp-balances"></div>
     <p class="sec-lbl">All expenses</p>
@@ -920,12 +922,12 @@ const WS={
   faint:()=>C('#F3F0FE','#191730'),
   bd:  ()=>C('#EEEDFE','#2D2950'),
   bdm: ()=>C('#CECBF6','#3C3870'),
-  th:  ()=>C('#26215C','#E4E1FF'),
-  tb:  ()=>C('#3C3489','#C4C0F5'),
-  tm:  ()=>C('#AFA9EC','#7370AA'),
-  tf:  ()=>C('#CECBF6','#453F70'),
-  acc: ()=>C('#534AB7','#8B83E8'),
-  accb:()=>C('#7F77DD','#9D96F0'),
+  th:  ()=>C('#26215C','#F0EEFF'),
+  tb:  ()=>C('#3C3489','#D8D4FF'),
+  tm:  ()=>C('#AFA9EC','#9A97CC'),
+  tf:  ()=>C('#CECBF6','#5C5890'),
+  acc: ()=>C('#534AB7','#9D96F0'),
+  accb:()=>C('#7F77DD','#B0ABFF'),
 };
 
 // ── AVATAR PROPS & COLOURS ────────────────────────────────────────
@@ -2042,19 +2044,42 @@ function renderHomeCrew(){
 // ── COUNTDOWN ──────────────────────────────────────────────────────
 function updateCountdown(){
   if(!T.dateStart){const b=document.getElementById('cd-box');if(b)b.style.display='none';return;}
-  // Parse "Month DD, YYYY" format reliably — use space before time, not T
   const cleaned=T.dateStart.replace(/,/g,'');
-  const tgt=new Date(cleaned+' 06:00:00');
+  // Countdown target: 5AM on trip start day
+  const tgt=new Date(cleaned+' 05:00:00');
   if(isNaN(tgt.getTime())){const b=document.getElementById('cd-box');if(b)b.style.display='none';return;}
   const now=new Date(),diff=tgt-now;
+  // "TRIP IS ON" window: from 5AM until 7AM (2hrs post-countdown)
+  const tripOnEnd=new Date(tgt.getTime()+2*3600000);
   const lbl=document.getElementById('cd-section-lbl');if(lbl)lbl.textContent='Countdown to '+T.name;
   const cdBox=document.getElementById('cd-box');
-  if(diff<=0){
+  const msgEl=document.getElementById('cd-msg');
+
+  if(now>=tgt&&now<tripOnEnd){
+    // 🎉 TRIP IS ON state
     if(cdBox)cdBox.style.display='none';
-    const m=document.getElementById('cd-msg');if(m){m.textContent='🎉 The trip is ON!';m.style.display='';}
+    if(msgEl){
+      msgEl.style.display='';
+      msgEl.innerHTML=`<div style="background:linear-gradient(135deg,#EEEDFE,#E1F5EE);border-radius:16px;padding:18px 16px;text-align:center;border:1px solid #CECBF6;margin-bottom:4px;">
+        <div style="font-size:32px;margin-bottom:6px;">🚗✨</div>
+        <div style="font-size:20px;font-weight:800;color:#534AB7;letter-spacing:.03em;">TRIP IS ON!</div>
+        <div style="font-size:13px;color:#7F77DD;margin-top:6px;">The adventure has begun 🎉🗺️🎶</div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;font-size:20px;">🌄 🏕️ 🛣️ 🎵 📸</div>
+      </div>`;
+    }
     return;
   }
+
+  if(now>=tripOnEnd){
+    // Past the TRIP IS ON window — hide countdown entirely
+    if(cdBox)cdBox.style.display='none';
+    if(msgEl)msgEl.style.display='none';
+    return;
+  }
+
+  // Normal countdown
   if(cdBox)cdBox.style.display='flex';
+  if(msgEl)msgEl.innerHTML='';
   document.getElementById('cd-days').textContent=Math.floor(diff/86400000);
   document.getElementById('cd-hours').textContent=Math.floor((diff%86400000)/3600000);
   const minSep=document.getElementById('cd-min-sep'),minUnit=document.getElementById('cd-min-unit');
@@ -2065,9 +2090,8 @@ function updateCountdown(){
     if(minUnit)minUnit.style.display='';
     const mEl=document.getElementById('cd-mins');
     if(mEl&&mEl.textContent!==String(newMins)){
-      // Trigger flip animation by removing/re-adding class
       minUnit.classList.remove('cd-flip');
-      void minUnit.offsetWidth; // reflow
+      void minUnit.offsetWidth;
       minUnit.classList.add('cd-flip');
     }
     if(mEl)mEl.textContent=newMins;
@@ -2075,7 +2099,7 @@ function updateCountdown(){
     if(minSep)minSep.style.display='none';
     if(minUnit){minUnit.style.display='none';minUnit.classList.remove('cd-flip');}
   }
-  const msg=document.getElementById('cd-msg');if(msg)msg.textContent='until the adventure begins!';
+  if(msgEl)msgEl.innerHTML=`<span style="font-size:11px;color:var(--tm);">until the adventure begins!</span>`;
 }
 
 // ── STOPS ──────────────────────────────────────────────────────────
@@ -2108,22 +2132,22 @@ function renderStops(){
     wrap.addEventListener('drop',e=>{e.preventDefault();wrap.style.outline='';if(dragIdx!==null&&dragIdx!==i){const m=stops.splice(dragIdx,1)[0];stops.splice(i,0,m);}dragIdx=null;renderStops();});
     wrap.addEventListener('dragend',()=>{wrap.style.outline='';dragIdx=null;});
     const row=document.createElement('div');row.className='stop-row';
-    row.innerHTML=`<div style="color:#CECBF6;padding:2px 4px;cursor:grab;" onclick="event.stopPropagation()">⠿</div>
+    row.innerHTML=`<div style="color:${WS.tf()};padding:2px 4px;cursor:grab;" onclick="event.stopPropagation()">⠿</div>
       <div style="width:10px;height:10px;border-radius:50%;background:${meta.dot};flex-shrink:0;margin-top:5px;"></div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:500;color:#3C3489;">${s.name}</div>
-        <div style="font-size:12px;color:#AFA9EC;margin-top:2px;">${s.sub}</div>
+        <div style="font-size:14px;font-weight:500;color:${WS.tb()};">${s.name}</div>
+        <div style="font-size:12px;color:${WS.tm()};margin-top:2px;">${s.sub}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
           <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${meta.color};color:${meta.text};">${meta.label}</span>
-          ${s.url?`<a href="${s.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#7F77DD;text-decoration:none;">📍 Maps</a>`:''}
+          ${s.url?`<a href="${s.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:${WS.accb()};text-decoration:none;">📍 Maps</a>`:''}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
         <div onclick="event.stopPropagation();cycleStop(${i})" style="cursor:pointer;text-align:center;">
           <span class="pill ${pm.cls}" style="font-size:10px;">${pm.lbl}</span>
-          <div style="font-size:9px;color:#CECBF6;margin-top:1px;">tap</div>
+          <div style="font-size:9px;color:${WS.tf()};margin-top:1px;">tap</div>
         </div>
-        <div style="color:#AFA9EC;font-size:12px;">${s.open?'▲':'▼'}</div>
+        <div style="color:${WS.tm()};font-size:12px;">${s.open?'▲':'▼'}</div>
       </div>`;
     row.onclick=()=>{s.open=!s.open;renderStops();};
     wrap.appendChild(row);
@@ -2401,13 +2425,12 @@ function renderBingo(){
     }
     cell.innerHTML=innerHtml;
     const del=document.createElement('button');
-    del.style.cssText='position:absolute;top:3px;left:4px;background:none;border:none;cursor:pointer;color:#F09595;font-size:13px;padding:0;opacity:0;transition:opacity .15s;line-height:1;';
+    del.style.cssText='position:absolute;top:3px;left:4px;background:none;border:none;cursor:pointer;color:#F09595;font-size:14px;font-weight:700;padding:0;line-height:1;z-index:2;';
     del.textContent='×';del.title='Remove';
-    cell.addEventListener('mouseenter',()=>del.style.opacity='1');
-    cell.addEventListener('mouseleave',()=>del.style.opacity='0');
     del.onclick=(e)=>{e.stopPropagation();T.bingo.splice(i,1);renderBingo();markDirty();};
     cell.appendChild(del);
-    cell.onclick=()=>{if(item.d){item.d=false;item.by=null;}else{item.d=true;item.by=selCrew.key;addFeedEntry('🎯',selCrew.name+' spotted: <b>'+item.t+'</b>');}renderBingo();renderGameLeaderboard();markDirty();if(item.d)toast(selCrew.name+' spotted: '+item.t+' 🎯');};
+    // Single tap marks the cell (tapping × removes it)
+    cell.onclick=()=>{item.d=true;item.by=selCrew.key;addFeedEntry('🎯',selCrew.name+' spotted: <b>'+item.t+'</b>');renderBingo();renderGameLeaderboard();markDirty();toast(selCrew.name+' spotted: '+item.t+' 🎯');};
     g.appendChild(cell);
   });
   el.appendChild(g);
@@ -3088,17 +3111,6 @@ function renderExpenses(){
   T.expenses.forEach(e=>{const sp=e.split||CREW.map(c=>c.key),sh=e.amount/sp.length;sp.forEach(k=>{if(allOwed[k]!==undefined)allOwed[k]+=sh;});});
   document.getElementById('exp-total').textContent='₹'+Math.round(total);
   document.getElementById('exp-per').textContent='₹'+Math.round(allOwed[selCrew.key]||0);
-  // Split bar — proportional spend per crew member
-  const sbEl=document.getElementById('exp-split-bar');
-  if(sbEl&&CREW.length&&total>0){
-    sbEl.innerHTML=`<div style="font-size:11px;font-weight:600;color:${WS.tm()};letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;">Spend breakdown</div>
-    <div style="height:10px;border-radius:6px;overflow:hidden;display:flex;margin-bottom:8px;">`
-    +CREW.map(c=>{const pct=Math.round((allOwed[c.key]||0)/total*100);return pct>0?`<div style="width:${pct}%;background:${c.color};opacity:.85;" title="${c.name}: ₹${Math.round(allOwed[c.key]||0)}"></div>`:''}).join('')
-    +`</div><div style="display:flex;gap:8px;flex-wrap:wrap;">`
-    +CREW.filter(c=>(allOwed[c.key]||0)>0).map(c=>`<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:${c.color};"></div><span style="font-size:11px;color:${WS.tm()};">${c.name.split(' ')[0]} ₹${Math.round(allOwed[c.key]||0)}</span></div>`).join('')
-    +`</div>`;
-    sbEl.style.background=WS.tint();sbEl.style.borderRadius='12px';sbEl.style.padding='12px';sbEl.style.marginBottom='12px';sbEl.style.border=`1px solid ${WS.bd()}`;
-  }else if(sbEl)sbEl.innerHTML='';
   // Balances — only for unsettled pairs
   const bEl=document.getElementById('exp-balances');bEl.innerHTML='';
   const me=selCrew.key;let anyBal=false;
@@ -3400,10 +3412,11 @@ function _applyWeather(d,el){
     el.textContent=_wxIcon(desc.charAt(0).toUpperCase()+desc.slice(1))+' '+temp+'°C';
     el.title=desc+' in '+(T.to||'');
     // Remove old glow classes
-    el.classList.remove('wx-sunny','wx-rain','wx-thunder','wx-mist');
+    el.classList.remove('wx-sunny','wx-rain','wx-thunder','wx-cloud','wx-mist');
     if(desc.includes('sunny')||desc.includes('clear'))el.classList.add('wx-sunny');
     else if(desc.includes('thunder'))el.classList.add('wx-thunder');
     else if(desc.includes('rain')||desc.includes('drizzle'))el.classList.add('wx-rain');
+    else if(desc.includes('cloud')||desc.includes('overcast')||desc.includes('partly'))el.classList.add('wx-cloud');
     else if(desc.includes('mist')||desc.includes('fog')||desc.includes('haze'))el.classList.add('wx-mist');
   }catch(e){el.style.display='none';}
 }
