@@ -1047,8 +1047,7 @@ function fbListenToTrip(tripId){
     const needsMigration=(remote._dataV||0)<3;
     // Merge remote on top of local defaults so new fields always have values
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
-    // Pin seed trip dates — Firebase may have stale/corrupted values
-    if(tripId===SEED_ID){TRIPS[idx].dateStart='June 20, 2026';TRIPS[idx].dateEnd='June 21, 2026';}
+    // Dates are now user-editable — no longer pinned after the timezone bug was fixed
     // ── Data migration v2: clear default songs that shipped with the app ──
     if(needsMigration){
       TRIPS[idx].songs=[];
@@ -1070,6 +1069,10 @@ function fbListenToTrip(tripId){
       renderWrap();renderBingo();renderDareList();renderPC();renderGameLeaderboard();renderWYR();renderTrivia();renderPredict();
       refreshPack();renderNotifFeed();
       renderFeed();renderRouteProgress();renderJournal();
+      // Keep trip header & countdown in sync with any remote date/name changes
+      const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
+      const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=T.from+' → '+T.to+(T.dateStart?' · '+T.dateStart:'');
+      updateCountdown();
       const dc=document.getElementById('home-crew-count');if(dc)dc.textContent=CREW.length;
     }
     renderAppHome();
@@ -3432,9 +3435,7 @@ function loadState(){
         // Reset highlights, pack, songs/spotify, and dates to fresh seed values
         merged.highlights=freshSeed.highlights;
         merged.pack=freshSeed.pack;
-        // keep merged.songs — do NOT reset to freshSeed.songs
-        merged.dateStart=freshSeed.dateStart; // pin June 20, 2026
-        merged.dateEnd=freshSeed.dateEnd;     // pin June 21, 2026
+        // keep merged.songs, dateStart, dateEnd — user edits must survive reloads
         // photoChallenge and stops: keep localStorage/Firebase state (don't reset on every load)
         return merged;
       }
