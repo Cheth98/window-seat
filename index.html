@@ -3596,9 +3596,9 @@ function loadState(){
         // but always reset highlights & pack to the fresh seed values so
         // removing defaults takes effect even for returning users.
         const merged=Object.assign({},freshSeed,savedTrip);
-        // Reset highlights, pack, songs/spotify, and dates to fresh seed values
-        merged.highlights=freshSeed.highlights;
+        // Reset pack to fresh seed values so removing defaults takes effect
         merged.pack=freshSeed.pack;
+        // keep merged.highlights — user-added highlights must survive reloads
         // keep merged.songs, dateStart, dateEnd — user edits must survive reloads
         // photoChallenge and stops: keep localStorage/Firebase state (don't reset on every load)
         return merged;
