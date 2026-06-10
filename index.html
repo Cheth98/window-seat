@@ -213,6 +213,7 @@ textarea{min-height:64px;}
 /* ── DARK MODE OVERRIDES for trip card / stat grid / modals ── */
 [data-dark] .trip-card{background:var(--card);border-color:var(--bd);}
 [data-dark] .trip-card-actions{background:var(--tint);}
+[data-dark] #home-header{background:linear-gradient(160deg,#1E1B36 0%,#1B2E2A 60%,#2A2418 100%)!important;border-bottom-color:var(--bd)!important;}
 [data-dark] .stat-c{background:var(--tint)!important;border-color:var(--bd);}
 [data-dark] .modal-sheet{background:var(--card)!important;}
 [data-dark] .stop-edit{background:var(--tint)!important;}
@@ -478,7 +479,7 @@ textarea{min-height:64px;}
 
 <!-- HOME -->
 <div class="screen" id="s-home">
-  <div style="background:linear-gradient(160deg,#EEEDFE 0%,#E1F5EE 60%,#FAEEDA 100%);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 16px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid #CECBF6;">
+  <div id="home-header" style="background:linear-gradient(160deg,#EEEDFE 0%,#E1F5EE 60%,#FAEEDA 100%);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 16px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid #CECBF6;">
     <div id="home-av" onclick="goTo('s-profile')" style="width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #AFA9EC;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Edit your profile"></div>
     <div style="flex:1;min-width:0;overflow:hidden;">
       <div style="font-size:15px;font-weight:700;color:var(--th);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="home-trip-name">Trip</div>
@@ -488,7 +489,7 @@ textarea{min-height:64px;}
       </div>
       <div style="margin-top:3px;"><span id="weather-chip" style="display:none;font-size:10px;color:var(--tb);background:var(--pale);border-radius:10px;padding:2px 7px;white-space:nowrap;"></span></div>
     </div>
-    <button onclick="goTo('s-app-home')" style="background:rgba(83,74,183,.12);border:none;cursor:pointer;color:#534AB7;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">← All trips</button>
+    <button onclick="goTo('s-app-home')" style="background:var(--pale);border:none;cursor:pointer;color:var(--acc);font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">← All trips</button>
   </div>
   <div class="scroll">
     <div id="notif-feed" style="margin-top:12px;"></div>
@@ -637,7 +638,7 @@ textarea{min-height:64px;}
 <div class="screen" id="s-game-dare">
   <div class="topbar"><button class="back-btn" onclick="goTo('s-games')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><span class="topbar-title">🎲 Dare spinner</span></div>
   <div class="scroll">
-    <div style="background:#F7F5FF;border-radius:18px;padding:24px 20px;margin-top:14px;border:1px solid #EEEDFE;text-align:center;"><div style="font-size:40px;margin-bottom:14px;">🎲</div><div style="font-size:17px;color:#3C3489;line-height:1.6;font-weight:500;" id="dare-text">Tap below to spin!</div></div>
+    <div style="background:var(--tint);border-radius:18px;padding:24px 20px;margin-top:14px;border:1px solid var(--bd);text-align:center;"><div style="font-size:40px;margin-bottom:14px;">🎲</div><div style="font-size:17px;color:var(--tb);line-height:1.6;font-weight:500;" id="dare-text">Tap below to spin!</div></div>
     <button class="primary-btn" onclick="shuffleDare()">🔀 Spin a new dare</button>
     <p class="sec-lbl" style="margin-top:18px;">All dares <span id="dare-pool-count"></span></p>
     <div id="dare-list-all"></div>
@@ -1431,12 +1432,12 @@ function renderAppHome(){
       <div class="trip-card-header">
         <div class="trip-card-icon" style="background:linear-gradient(135deg,#EEEDFE,#E1F5EE);">${trip.emoji}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:16px;font-weight:600;color:#26215C;margin-bottom:3px;">${trip.name}</div>
+          <div style="font-size:16px;font-weight:600;color:var(--th);margin-bottom:3px;">${trip.name}</div>
           <div style="font-size:12px;color:var(--tm);">${trip.from} → ${trip.to}</div>
           <div style="font-size:12px;color:var(--tm);">${trip.dateStart}${trip.dateEnd&&trip.dateEnd!==trip.dateStart?' – '+trip.dateEnd:''}</div>
           <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
             <div style="display:flex;align-items:center;margin-left:6px;">${crewPills}</div>
-            <span style="font-size:12px;color:#534AB7;font-weight:500;">${trip.crew.length} crew</span>
+            <span style="font-size:12px;color:var(--tb);font-weight:500;">${trip.crew.length} crew</span>
           </div>
         </div>
       </div>
@@ -2442,8 +2443,8 @@ function renderDareList(){
   const cnt=document.getElementById('dare-pool-count');if(cnt)cnt.textContent='('+T.dares.length+')';
   const dc=document.getElementById('dares-count');if(dc)dc.textContent=T.dares.length+' dares in the pool';
   T.dares.forEach((d,i)=>{
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F0FE;';
-    row.innerHTML=`<div style="flex:1;font-size:13px;color:#3C3489;">${d}</div>`;
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);';
+    row.innerHTML=`<div style="flex:1;font-size:13px;color:var(--tb);">${d}</div>`;
     const btn=document.createElement('button');btn.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;';btn.textContent='×';
     btn.onclick=()=>{T.dares.splice(i,1);renderDareList();toast('Dare removed');};row.appendChild(btn);el.appendChild(row);
   });
@@ -2454,9 +2455,9 @@ function renderPC(){
   const done=T.photoChallenge.filter(c=>c.done).length;
   const prog=document.getElementById('pc-prog');if(prog)prog.textContent=done+' / '+T.photoChallenge.length+' completed';
   T.photoChallenge.forEach((ch,i)=>{
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F3F0FE;cursor:pointer;';
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bd);cursor:pointer;';
     const ico=ch.done?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
-    const span=document.createElement('span');span.style.cssText=`flex:1;font-size:14px;color:${ch.done?'#AFA9EC':'#3C3489'};text-decoration:${ch.done?'line-through':'none'}`;span.textContent=ch.text;
+    const span=document.createElement('span');span.style.cssText=`flex:1;font-size:14px;color:${ch.done?WS.tm():'var(--tb)'};text-decoration:${ch.done?'line-through':'none'}`;span.textContent=ch.text;
     row.innerHTML=`<div style="flex-shrink:0;">${ico}</div>`;row.appendChild(span);
     if(ch.done&&ch.by){const m=CREW.find(c=>c.key===ch.by);if(m){const av=document.createElement('div');av.style.cssText=`width:26px;height:26px;border-radius:50%;background:${m.bg};border:2px solid ${m.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;av.innerHTML=svgAv(m,20);av.title=m.name;row.appendChild(av);}}
     const del=document.createElement('button');del.style.cssText='background:none;border:none;cursor:pointer;color:#F09595;font-size:18px;padding:2px 6px;flex-shrink:0;';del.textContent='×';del.onclick=(e)=>{e.stopPropagation();T.photoChallenge.splice(i,1);renderPC();};row.appendChild(del);
@@ -2686,7 +2687,7 @@ function renderTrivia(){
   const colors=['#2D7DD2','#D4537E','#27AE60','#E67E22'];
   const lightColors=['#E8F4FD','#FBEAF0','#E8FDF0','#FEF5E7'];
 
-  const scoreBar=Object.keys(scores).length?`<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+  const scoreBar=Object.keys(scores).length?`<div style="background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;">SCORES THIS GAME</div><button onclick="triviaResetScores()" style="background:none;border:none;font-size:11px;color:#AFA9EC;cursor:pointer;padding:0;">Reset scores</button></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
     ${CREW.map(c=>`<div style="display:flex;align-items:center;gap:5px;background:var(--tint);border-radius:20px;padding:4px 10px;"><span style="font-size:12px;">${svgAv(c,16)}</span><span style="font-size:12px;font-weight:600;color:var(--tb);">${c.name.split(' ')[0]}</span><span style="font-size:13px;font-weight:700;color:var(--acc);">${scores[c.key]||0}</span></div>`).join('')}
@@ -2694,7 +2695,7 @@ function renderTrivia(){
 
   el.innerHTML=`
     ${scoreBar}
-    <div style="background:#F0F7FF;border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid #C8E4F8;">
+    <div style="background:var(--tint);border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid var(--bd);">
       <div style="font-size:11px;font-weight:700;color:#2D7DD2;letter-spacing:.08em;margin-bottom:10px;">🧠 TRIVIA BATTLE</div>
       <div style="font-size:16px;font-weight:600;color:var(--th);line-height:1.4;">${q}</div>
     </div>
@@ -2703,13 +2704,13 @@ function renderTrivia(){
       const chosen=myAns===i;
       const correct=revealed&&i===ans;
       const wrong=revealed&&chosen&&i!==ans;
-      const bg=correct?lightColors[1]:wrong?'#FFF0F0':chosen?lightColors[0]:'#fff';
-      const border=correct?'#27AE60':wrong?'#E74C3C':chosen?colors[0]:'#CECBF6';
+      const bg=correct?lightColors[1]:wrong?'#FFF0F0':chosen?lightColors[0]:WS.card();
+      const border=correct?'#27AE60':wrong?'#E74C3C':chosen?colors[0]:WS.bdm();
       const voters=revealed?CREW.filter(c=>answers[c.key]===i):[];
       return `<button onclick="triviaAnswer(${i})" style="width:100%;border:2px solid ${border};background:${bg};border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .15s;${myAns!==undefined&&!chosen&&!correct?'opacity:.55;':''}">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:26px;height:26px;border-radius:50%;background:${chosen||correct?colors[i%4]:lightColors[i%4]};color:${chosen||correct?'#fff':colors[i%4]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${letters[i]}</div>
-          <div style="font-size:14px;font-weight:500;color:#26215C;flex:1;">${opt}</div>
+          <div style="font-size:14px;font-weight:500;color:${WS.th()};flex:1;">${opt}</div>
           ${correct?'<span style="font-size:18px;">✅</span>':wrong?'<span style="font-size:18px;">❌</span>':''}
         </div>
         ${revealed&&voters.length?`<div style="display:flex;gap:3px;margin-top:8px;padding-left:36px;">${voters.map(c=>`<div title="${c.name}" style="width:22px;height:22px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:inline-flex;align-items:center;justify-content:center;">${svgAv(c,16)}</div>`).join('')}</div>`:''}
@@ -2786,7 +2787,7 @@ function renderPredict(){
   const myAns=answers[selCrew.key];
   const totalAnswered=Object.keys(answers).length;
 
-  const scoreBar=Object.keys(scores).length?`<div style="background:#fff;border:1px solid #EEEDFE;border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+  const scoreBar=Object.keys(scores).length?`<div style="background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:14px;">
     <div style="font-size:11px;font-weight:700;color:#AFA9EC;letter-spacing:.08em;margin-bottom:8px;">SCORES THIS GAME</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
     ${CREW.map(c=>`<div style="display:flex;align-items:center;gap:5px;background:var(--tint);border-radius:20px;padding:4px 10px;">${svgAv(c,16)}<span style="font-size:12px;font-weight:600;color:var(--tb);margin-left:4px;">${c.name.split(' ')[0]}</span><span style="font-size:13px;font-weight:700;color:#27AE60;">${scores[c.key]||0}</span></div>`).join('')}
@@ -2797,7 +2798,7 @@ function renderPredict(){
 
   el.innerHTML=`
     ${scoreBar}
-    <div style="background:#EDFAF3;border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid #C3EDDA;">
+    <div style="background:var(--tint);border-radius:20px;padding:20px 16px;margin-top:8px;border:1px solid var(--bd);">
       <div style="font-size:11px;font-weight:700;color:#27AE60;letter-spacing:.08em;margin-bottom:10px;">🔮 PREDICT THE TRIP</div>
       <div style="font-size:17px;font-weight:600;color:var(--th);line-height:1.4;">${question}</div>
     </div>
@@ -2807,7 +2808,7 @@ function renderPredict(){
       const isActual=revealed&&actual===c.key;
       const wrong=revealed&&chosen&&actual!==c.key;
       const predictors=revealed?CREW.filter(cr=>answers[cr.key]===c.key):[];
-      return `<button onclick="predictVote('${c.key}')" style="width:100%;border:2px solid ${isActual?'#27AE60':wrong?'#E74C3C':chosen?c.color:'#CECBF6'};background:${isActual?'#EDFAF3':wrong?'#FFF0F0':chosen?c.bg:'#fff'};border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .15s;${myAns&&!chosen&&!isActual?'opacity:.55;':''}">
+      return `<button onclick="predictVote('${c.key}')" style="width:100%;border:2px solid ${isActual?'#27AE60':wrong?'#E74C3C':chosen?c.color:WS.bdm()};background:${isActual?'#EDFAF3':wrong?'#FFF0F0':chosen?c.bg:WS.card()};border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .15s;${myAns&&!chosen&&!isActual?'opacity:.55;':''}">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:32px;height:32px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(c,22)}</div>
           <div style="font-size:14px;font-weight:600;color:var(--th);flex:1;">${c.name}</div>
@@ -2845,7 +2846,7 @@ function renderPack(){
     ico.innerHTML=mine?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CECBF6" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
     ico.onclick=()=>togglePack(i);
     const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;cursor:pointer;';
-    info.innerHTML=`<div style="font-size:14px;color:${mine?'#AFA9EC':'#3C3489'};text-decoration:${mine?'line-through':'none'};">${item.text}</div><div style="font-size:11px;color:#AFA9EC;margin-top:2px;">${cnt}/${CREW.length} packed</div>`;
+    info.innerHTML=`<div style="font-size:14px;color:${mine?WS.tm():'var(--tb)'};text-decoration:${mine?'line-through':'none'};">${item.text}</div><div style="font-size:11px;color:var(--tm);margin-top:2px;">${cnt}/${CREW.length} packed</div>`;
     info.onclick=()=>togglePack(i);
     const avs=document.createElement('div');avs.style.cssText='display:flex;gap:3px;align-items:center;';
     CREW.forEach(c=>{const d=document.createElement('div');d.style.cssText=`width:20px;height:20px;border-radius:50%;background:${item.ticked&&item.ticked[c.key]?c.bg:'#F3F0FE'};border:1.5px solid ${item.ticked&&item.ticked[c.key]?c.color:'#EEEDFE'};display:flex;align-items:center;justify-content:center;opacity:${item.ticked&&item.ticked[c.key]?1:0.3};`;d.innerHTML=svgAv(c,16);avs.appendChild(d);});
@@ -2893,8 +2894,8 @@ function renderSongs(){
     const row=document.createElement('div');row.className='song-row';
     row.innerHTML=`<div style="width:34px;height:34px;border-radius:8px;background:#E8FAF2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${spotifyIcon()}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:500;color:#3C3489;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
-        ${s.memory?`<div style="font-size:11px;color:#AFA9EC;">${s.memory}</div>`:''}
+        <div style="font-size:13px;font-weight:500;color:var(--tb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+        ${s.memory?`<div style="font-size:11px;color:var(--tm);">${s.memory}</div>`:''}
         ${s.url?`<a href="${s.url}" target="_blank" style="font-size:11px;color:#1DB954;text-decoration:none;">▶ Open in Spotify</a>`:''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -3137,7 +3138,7 @@ function renderExpenses(){
     T.expenses.forEach(e=>{const sp=e.split||CREW.map(x=>x.key);if(e.payer===c.key&&sp.includes(me))net-=e.amount/sp.length;if(e.payer===me&&sp.includes(c.key))net+=e.amount/sp.length;});
     if(Math.abs(net)<0.5)return;
     anyBal=true;
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F0FE;';
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);';
     const col=net>0?'#0F6E56':'#993556';
     const txt=net>0?`${c.name} owes you ₹${Math.round(net)}`:`You owe ${c.name} ₹${Math.round(-net)}`;
     const sb=document.createElement('button');sb.className='small-btn save-btn';sb.style.cssText='padding:4px 8px;font-size:10px;flex-shrink:0;';sb.textContent='✓ Done';
@@ -3152,7 +3153,7 @@ function renderExpenses(){
     const pc=CREW.find(c=>c.key===e.payer)||CREW[0]||{name:'?',bg:'#EEEDFE',color:'#534AB7'};
     const spNames=(e.split||CREW.map(c=>c.key)).map(k=>cName(k)).join(', ');
     const row=document.createElement('div');row.className='exp-row';
-    row.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;background:${pc.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(pc,22)}</div><div style="flex:1;min-width:0;"><div style="font-size:13px;color:#3C3489;">${e.desc}</div><div style="font-size:11px;color:#AFA9EC;">Paid by ${pc.name} · split: ${spNames}</div></div><div style="font-size:14px;font-weight:600;color:#3C3489;flex-shrink:0;margin-right:6px;">₹${e.amount}</div><button style="background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:12px;padding:5px 9px;border-radius:6px;" onclick="T.expenses.splice(${i},1);renderExpenses();">✕</button>`;
+    row.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;background:${pc.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgAv(pc,22)}</div><div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--tb);">${e.desc}</div><div style="font-size:11px;color:var(--tm);">Paid by ${pc.name} · split: ${spNames}</div></div><div style="font-size:14px;font-weight:600;color:var(--tb);flex-shrink:0;margin-right:6px;">₹${e.amount}</div><button style="background:#FBEAF0;border:none;cursor:pointer;color:#993556;font-size:12px;padding:5px 9px;border-radius:6px;" onclick="T.expenses.splice(${i},1);renderExpenses();">✕</button>`;
     eEl.appendChild(row);
   });
   if(!T.expenses.length)eEl.innerHTML='<div style="font-size:13px;color:#AFA9EC;padding:8px 0;">No expenses yet</div>';
@@ -3216,7 +3217,7 @@ function renderCrewCards(){
       <div style="width:50px;height:50px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,40)}</div>
       <div style="flex:1;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <div style="font-size:16px;font-weight:600;color:#3C3489;">${c.name}</div>
+          <div style="font-size:16px;font-weight:600;color:var(--th);">${c.name}</div>
           ${isMe?'<span class="pill p-purple" style="font-size:10px;">You</span>':''}
         </div>
         <div style="font-size:13px;color:${c.status?c.color:'#CECBF6'};font-style:${c.status?'normal':'italic'};">${c.status||'no status yet'}</div>
