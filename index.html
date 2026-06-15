@@ -1030,7 +1030,7 @@ function makeTripData(o){
 // ── SEED TRIP: BENGALURU → MYSORE ─────────────────────────────────
 const SEED_ID='bng-mys-2026';
 let TRIPS=[makeTripData({
-  id:SEED_ID,name:'Bengaluru to Mysore',emoji:'🚗',
+  id:SEED_ID,name:'Girls Tripppp!',emoji:'🚗',
   from:'Bengaluru',to:'Mysore',dateStart:'June 20, 2026',dateEnd:'June 21, 2026',
   dist:'~145 km',inviteToken:'wsBMJ2026',preConfigured:true,
   albumUrl:'https://photos.app.goo.gl/nSjzTZj5JuNMxXWM9',albumSetupDone:true,
@@ -1137,8 +1137,14 @@ function fbListenToTrip(tripId){
     // Check raw Firebase value BEFORE merge — makeTripData default sets _dataV:2
     // which would make the post-merge check always pass even on old Firebase data
     const needsMigration=(remote._dataV||0)<3;
+    // Preserve per-device fields before overwriting with remote data.
+    // _myCrewKey is never written to Firebase (see fbSaveTrip) but guard
+    // against any legacy data that slipped through by always restoring local.
+    const localMyCrewKey=TRIPS[idx]._myCrewKey;
     // Merge remote on top of local defaults so new fields always have values
     TRIPS[idx]=Object.assign(makeTripData(TRIPS[idx]),remote);
+    // Restore the per-device crew key — never let Firebase overwrite it
+    if(localMyCrewKey)TRIPS[idx]._myCrewKey=localMyCrewKey;
     // Dates are now user-editable — no longer pinned after the timezone bug was fixed
     // ── Data migration v2: clear default songs that shipped with the app ──
     if(needsMigration){
@@ -1190,7 +1196,13 @@ function fbSaveTrip(trip){
   if(!trip)return;
   if(!_currentUser){_showSync('offline');return;} // not signed in — skip write
   _showSync('syncing');
-  _fbDb.ref('trips/'+trip.id).set(trip)
+  // Strip per-device fields before writing to Firebase.
+  // _myCrewKey is device-local (tells THIS device which crew member you are).
+  // Writing it to Firebase would cause every other device to think they are
+  // the same crew member — the exact multi-user identity bug we're fixing.
+  const payload=Object.assign({},trip);
+  delete payload._myCrewKey;
+  _fbDb.ref('trips/'+trip.id).set(payload)
     .then(()=>_showSync('saved'))
     .catch(e=>{console.warn('Firebase save error',e);_showSync(e.code==='PERMISSION_DENIED'||e.message&&e.message.includes('permission')?'offline':'offline');});
 }
@@ -1829,6 +1841,8 @@ function saveEditTrip(){
   if(T&&T.id===trip.id)T=trip;
   renderAppHome();
   markDirty();saveState();
+  // Persist name/date changes to Firebase immediately so all devices stay in sync
+  fbSaveTrip(trip);
   if(T&&T.id===trip.id){
     const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=trip.name;
     const hs=document.getElementById('home-trip-sub');if(hs)hs.textContent=trip.from+' → '+trip.to+(trip.dateStart?' · '+trip.dateStart:'');
