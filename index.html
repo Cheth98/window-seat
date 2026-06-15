@@ -815,7 +815,7 @@ textarea{min-height:64px;}
     <p class="sec-lbl" style="margin-top:4px;">Names &amp; status</p>
     <div id="crew-cards"></div>
     <p class="sec-lbl">Trip vibe</p>
-    <div style="background:#F7F5FF;border-radius:12px;padding:14px;border:1px solid #EEEDFE;"><textarea id="vibe-text" style="background:transparent;border:none;font-size:14px;color:#3C3489;line-height:1.7;width:100%;resize:none;min-height:44px;padding:0;box-shadow:none;" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">The kind of trip you'll still talk about in 10 years.</textarea></div>
+    <div style="background:var(--tint);border-radius:12px;padding:14px;border:1px solid var(--bd);"><textarea id="vibe-text" style="background:transparent;border:none;font-size:14px;color:var(--tb);line-height:1.7;width:100%;resize:none;min-height:44px;padding:0;box-shadow:none;" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';saveVibeText(this.value)" placeholder="The kind of trip you'll still talk about in 10 years."></textarea></div>
   </div>
   <div class="bnav">
     <button class="bnav-btn" onclick="goTo('s-home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
@@ -1024,7 +1024,7 @@ function makeTripData(o){
       other:{label:'Other',color:'#F1EFE8',text:'#5F5E5A',dot:'#AFA9EC'},
     },
     spotifyCreated:false,spotifyTrackIds:[],spotifyPlaylistId:null,spotifyPlaylistUrl:null,albumPhotoSrcs:[],_dataV:3,
-    feed:[],vibes:{},journal:{},wyr:null,trivia:null,predict:null,
+    feed:[],vibes:{},vibeText:'',journal:{},wyr:null,trivia:null,predict:null,
     albumUrl:'',albumSetupDone:false,
   },o);
 }
@@ -3360,6 +3360,16 @@ function openVibePicker(){
   p.onclick=(e)=>{if(e.target===p)p.remove();};
   document.body.appendChild(p);
 }
+function saveVibeText(val){
+  if(!T)return;
+  T.vibeText=val;
+  markDirty();
+}
+function renderVibeText(){
+  const ta=document.getElementById('vibe-text');if(!ta||!T)return;
+  ta.value=T.vibeText||'';
+  ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';
+}
 function setVibe(emoji){
   if(!T.vibes)T.vibes={};
   T.vibes[selCrew.key]={emoji,ts:Date.now()};
@@ -3558,7 +3568,7 @@ function saveCustomCat(){
 // ── UTILITIES ──────────────────────────────────────────────────────
 function toggleForm(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function toast(msg){const el=document.getElementById('toast-el');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}if(id==='s-games')renderGameLeaderboard();if(id==='s-game-wyr')renderWYR();if(id==='s-game-trivia')renderTrivia();if(id==='s-game-predict')renderPredict();}
+function _goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const sc=document.getElementById(id);if(sc)sc.classList.add('active');window.scrollTo(0,0);if(id==='s-profile')renderProfile();if(id==='s-memories')renderJournal();if(id==='s-home'){renderFeed();renderRouteProgress();}if(id==='s-games')renderGameLeaderboard();if(id==='s-game-wyr')renderWYR();if(id==='s-game-trivia')renderTrivia();if(id==='s-game-predict')renderPredict();if(id==='s-crew')renderVibeText();}
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
 // Everything lives in localStorage under 'ws_state'.
