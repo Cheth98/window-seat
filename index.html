@@ -857,11 +857,7 @@ textarea{min-height:64px;}
       </div>
     </div>
 
-    <p class="sec-lbl">Switch avatar</p>
-    <div style="background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:18px;">
-      <div style="font-size:13px;color:var(--tm);margin-bottom:12px;">Not the right person? Pick who you actually are:</div>
-      <div id="switch-avatar-grid" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;"></div>
-    </div>
+
 
     <p class="sec-lbl">Appearance</p>
     <div class="toggle-wrap" onclick="toggleDarkMode()">
@@ -3262,39 +3258,6 @@ function toggleDarkMode(){
 }
 
 // ── PROFILE ────────────────────────────────────────────────────────
-function switchToAvatar(crewKey){
-  if(!T||!CREW)return;
-  const c=CREW.find(x=>x.key===crewKey);
-  if(!c){toast('Avatar not found');return;}
-  selCrew=c;selPayer=c;
-  T._myCrewKey=crewKey;
-  // Link Google UID to this crew member so future sign-ins auto-match
-  if(_currentUser){
-    c.googleUid=_currentUser.uid;
-    // Clear googleUid from any other crew member that had this UID (the stale link)
-    CREW.forEach(m=>{if(m.key!==crewKey&&m.googleUid===_currentUser.uid)delete m.googleUid;});
-    fbSaveTrip(T);
-  }
-  markDirty();saveState();
-  renderProfile();renderHomeCrew();renderCrewCards();
-  const hn=document.getElementById('home-trip-name');if(hn)hn.textContent=T.name;
-  toast('Switched to '+c.name+' ✓');
-}
-function renderSwitchAvatarGrid(){
-  const el=document.getElementById('switch-avatar-grid');if(!el||!CREW)return;
-  el.innerHTML='';
-  CREW.forEach(c=>{
-    const isMe=selCrew&&c.key===selCrew.key;
-    const btn=document.createElement('button');
-    btn.style.cssText=`background:${isMe?'var(--pale)':'var(--tint)'};border:2px solid ${isMe?'var(--acc)':'var(--bd)'};border-radius:14px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:70px;`;
-    btn.innerHTML=`<div style="width:44px;height:44px;border-radius:50%;background:${c.bg};border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;">${svgAv(c,32)}</div>
-      <div style="font-size:12px;font-weight:600;color:${isMe?'var(--acc)':'var(--tb)'};">${c.name.split(' ')[0]}</div>
-      ${isMe?'<div style="font-size:10px;color:var(--acc);">✓ You</div>':''}`;
-    if(!isMe)btn.onclick=()=>switchToAvatar(c.key);
-    else btn.style.cursor='default';
-    el.appendChild(btn);
-  });
-}
 function renderProfile(){
   if(!selCrew)return;
   const c=selCrew;
@@ -3305,7 +3268,6 @@ function renderProfile(){
     avEl.innerHTML=svgAv(c,68);
   }
   const nd=document.getElementById('profile-name-display');if(nd)nd.textContent=c.name;
-  renderSwitchAvatarGrid();
   const sd=document.getElementById('profile-status-display');
   if(sd){sd.textContent=c.status||'No status set';sd.style.color=c.status?c.color:'#CECBF6';}
   // Pre-fill inputs
