@@ -3615,13 +3615,8 @@ function loadState(){
     const restoredTrips=saved.trips.map(savedTrip=>{
       if(savedTrip.id===SEED_ID){
         // Merge saved state (stops ticked, bingo, etc.) on top of fresh seed,
-        // but always reset highlights & pack to the fresh seed values so
-        // removing defaults takes effect even for returning users.
         const merged=Object.assign({},freshSeed,savedTrip);
-        // Reset pack to fresh seed values so removing defaults takes effect
-        merged.pack=freshSeed.pack;
-        // keep merged.highlights — user-added highlights must survive reloads
-        // keep merged.songs, dateStart, dateEnd — user edits must survive reloads
+        // keep merged.pack, merged.highlights, merged.songs, dateStart, dateEnd — all user edits must survive reloads
         // photoChallenge and stops: keep localStorage/Firebase state (don't reset on every load)
         return merged;
       }
