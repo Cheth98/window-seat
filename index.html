@@ -3621,7 +3621,7 @@ function markDirty(){
   _fbWriteTimer=setTimeout(()=>{
     const trip=T&&TRIPS.find(t=>t.id===T.id)||T;
     if(trip)fbSaveTrip(trip);
-  },400);
+  },100);
 }
 
 // Auto-save every 3 seconds if anything changed
