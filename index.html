@@ -1196,7 +1196,7 @@ function _showSync(state){
 
 function fbSaveTrip(trip){
   if(!trip)return;
-  if(!_currentUser){_showSync('offline');return;} // not signed in — skip write
+  if(!_currentUser){_showSync('offline');return;} // no Firebase session yet (anonymous auth pending)
   _showSync('syncing');
   // Strip per-device fields before writing to Firebase.
   // _myCrewKey is device-local (tells THIS device which crew member you are).
@@ -1222,34 +1222,50 @@ function renderYouAreChip(){
 }
 
 // ── GOOGLE AUTH ────────────────────────────────────────────────────
+// _currentUser = Firebase auth user (anonymous OR Google) — always set after init
+// _googleUser  = Google-signed-in user only — used for crew identity & UI display
 let _currentUser=null;
-let _authSettled=false; // true once onAuthStateChanged has fired at least once
+let _googleUser=null;
+let _authSettled=false;
 
-let _pendingActiveId=null; // set at startup if user had an active trip; consumed on sign-in
+let _pendingActiveId=null;
 
 _fbAuth.onAuthStateChanged(user=>{
   _currentUser=user;
+  // Track Google-authenticated user separately from anonymous sessions
+  _googleUser=(user&&!user.isAnonymous)?user:null;
   _authSettled=true;
-  // If there's a pending auth gate waiting for sign-in, resolve it now
-  if(_authGateCb){
-    // Remove ALL auth gate overlays (guards against duplicate creation)
-    document.querySelectorAll('[id=auth-gate-overlay]').forEach(el=>el.remove());
-    if(user){const cb=_authGateCb;_authGateCb=null;cb();}
-    else{_authGateCb=null;}
+
+  // If no Firebase session at all, sign in anonymously so writes always reach Firebase.
+  // Anonymous auth gives a valid Firebase token without requiring Google sign-in.
+  // This is the root fix for Sherbet/Neens: their changes were silently dropped
+  // because fbSaveTrip bailed when _currentUser was null.
+  if(!user){
+    _fbAuth.signInAnonymously().catch(e=>console.warn('anon auth failed',e));
+    return;
   }
-  // When auth state resolves, auto-identify the user's crew member
-  if(user&&T){
-    const match=CREW.find(c=>c.googleUid===user.uid);
+
+  // If there's a pending Google auth gate waiting for sign-in, resolve it now
+  // (only Google sign-in counts — anonymous doesn't satisfy the crew identity gate)
+  if(_authGateCb&&_googleUser){
+    document.querySelectorAll('[id=auth-gate-overlay]').forEach(el=>el.remove());
+    const cb=_authGateCb;_authGateCb=null;cb();
+  }
+
+  // Auto-identify crew member by Google UID
+  if(_googleUser&&T){
+    const match=CREW.find(c=>c.googleUid===_googleUser.uid);
     if(match){selCrew=match;selPayer=match;renderYouAreChip();}
   }
-  // Auto-open active trip on sign-in (PWA home screen launch)
-  if(user&&_pendingActiveId&&!_authGateCb){
+
+  // Auto-open active trip on sign-in (PWA home screen launch) — Google users only
+  if(_googleUser&&_pendingActiveId&&!_authGateCb){
     const tid=_pendingActiveId;_pendingActiveId=null;
     const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
     if(trip){
       if(!Array.isArray(trip.crew))trip.crew=[];
       activateTrip(trip);
-      const byUid=CREW.find(c=>c.googleUid===user.uid);
+      const byUid=CREW.find(c=>c.googleUid===_googleUser.uid);
       const storedKey=trip._myCrewKey;
       selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
       if(!selCrew)selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
@@ -1263,10 +1279,10 @@ _fbAuth.onAuthStateChanged(user=>{
 function renderGoogleAuthUI(){
   const el=document.getElementById('google-auth-bar');
   if(!el)return;
-  if(_currentUser){
+  if(_googleUser){
     el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:#534AB7;">
-      <img src="${_currentUser.photoURL||''}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
-      <span style="flex:1;">${_currentUser.displayName||_currentUser.email}</span>
+      <img src="${_googleUser.photoURL||''}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"/>
+      <span style="flex:1;">${_googleUser.displayName||_googleUser.email}</span>
       <button onclick="fbSignOut()" style="background:none;border:none;cursor:pointer;font-size:11px;color:#AFA9EC;padding:2px 6px;border-radius:6px;border:1px solid #EEEDFE;">Sign out</button>
     </div>`;
   }else{
@@ -1309,13 +1325,15 @@ async function fbSignInGoogle(){
 // If already signed in, calls cb() immediately.
 let _authGateCb=null;
 function requireAuth(cb){
-  if(_currentUser){cb();return;}
-  // If auth hasn't settled yet (first load), wait up to 3s for it before showing gate
+  // Google sign-in required to open/join a trip (for crew identity)
+  if(_googleUser){cb();return;}
+  // If auth hasn't settled yet (first load), wait up to 3s
   if(!_authSettled){
     let waited=false;
     const unsub=_fbAuth.onAuthStateChanged(u=>{
       if(waited)return; waited=true; unsub();
-      if(u){_currentUser=u;cb();}
+      const gu=(u&&!u.isAnonymous)?u:null;
+      if(gu){_googleUser=gu;cb();}
       else{_showAuthGate(cb);}
     });
     setTimeout(()=>{if(!waited){waited=true;unsub();_showAuthGate(cb);}},3000);
@@ -1385,7 +1403,10 @@ async function _handleAuthRedirect(){
 }
 
 async function fbSignOut(){
+  _googleUser=null;
   await _fbAuth.signOut();
+  // Re-establish anonymous auth so Firebase writes still work after Google sign-out
+  _fbAuth.signInAnonymously().catch(()=>{});
   toast('Signed out');
 }
 
@@ -1525,7 +1546,7 @@ function openTrip(tid){
       if(!Array.isArray(trip.crew))trip.crew=[];
       activateTrip(trip);
       const storedKey=trip._myCrewKey;
-      const byUid=_currentUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
+      const byUid=_googleUser&&CREW.find(c=>c.googleUid===_currentUser.uid);
       selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
       if(!selCrew){selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};}
       selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
@@ -1685,7 +1706,7 @@ function renderInviteCrewPick(trip){
 }
 async function acceptInvitePick(){
   if(!pendingInvite||!invPickedKey){toast('Pick your avatar first');return;}
-  if(!_currentUser){
+  if(!_googleUser){
     toast('Signing in with Google…');
     // Save pending join so redirect flow can resume after sign-in
     _savePendingJoin(pendingInvite.trip.id, invPickedKey);
@@ -1697,7 +1718,7 @@ async function acceptInvitePick(){
   const trip=pendingInvite.trip;
   // Link Google account to this avatar slot
   const member=trip.crew.find(c=>c.key===invPickedKey);
-  if(member)member.googleUid=_currentUser.uid;
+  if(member&&_googleUser)member.googleUid=_googleUser.uid;
   trip._myCrewKey=invPickedKey;
   activateTrip(trip);
   selCrew=CREW.find(c=>c.key===invPickedKey)||CREW[0];
@@ -1753,12 +1774,12 @@ async function acceptInviteCreate(){
     toast('That prop + colour combo is taken — pick a different one');return;
   }
   // Require Google sign-in before joining
-  if(!_currentUser){
+  if(!_googleUser){
     toast('Signing in with Google…');
     try{await fbSignInGoogle();}catch(e){return;}
   }
   const c=AV_COLORS[invColorIdx];
-  const newMember={key:'u'+Date.now(),name,color:c.text,bg:c.bg,prop:invProp,status:'',googleUid:_currentUser.uid,_editing:false};
+  const newMember={key:'u'+Date.now(),name,color:c.text,bg:c.bg,prop:invProp,status:'',googleUid:_googleUser?_googleUser.uid:'',_editing:false};
   pendingInvite.trip.crew.push(newMember);
   pendingInvite.trip._myCrewKey=newMember.key;
   document.getElementById('invite-modal').classList.remove('open');
@@ -1970,12 +1991,12 @@ function launchNewTrip(){
     crew:[creator],
   });
   // Link Google account if already signed in (no forced sign-in popup for creator)
-  if(_currentUser){creator.googleUid=_currentUser.uid;}
+  if(_googleUser){creator.googleUid=_googleUser.uid;}
   TRIPS.push(newTrip);
   renderAppHome();
   requireAuth(()=>{
     // Link Google account to creator now that we have it
-    if(_currentUser&&!creator.googleUid)creator.googleUid=_currentUser.uid;
+    if(_googleUser&&!creator.googleUid)creator.googleUid=_googleUser.uid;
     // Activate the trip and set selCrew to the creator
     activateTrip(newTrip);
     selCrew=creator;selPayer=creator;
@@ -3276,12 +3297,12 @@ function renderProfile(){
   // Google card
   const gc=document.getElementById('profile-google-card');
   if(gc){
-    if(_currentUser){
+    if(_googleUser){
       gc.innerHTML=`<div style="display:flex;align-items:center;gap:12px;">
-        <img src="${_currentUser.photoURL||''}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #EEEDFE;" onerror="this.style.display='none'"/>
+        <img src="${_googleUser.photoURL||''}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #EEEDFE;" onerror="this.style.display='none'"/>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:600;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_currentUser.displayName||'Google user'}</div>
-          <div style="font-size:12px;color:#AFA9EC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_currentUser.email||''}</div>
+          <div style="font-size:14px;font-weight:600;color:#26215C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_googleUser.displayName||'Google user'}</div>
+          <div style="font-size:12px;color:#AFA9EC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_googleUser.email||''}</div>
         </div>
         <button onclick="fbSignOut()" style="background:#FBEAF0;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#993556;padding:7px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0;">Sign out</button>
       </div>`;
