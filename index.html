@@ -1604,10 +1604,11 @@ function checkInviteParam(){
       }).catch(()=>toast('Could not load trip — check your connection'));
       return;
     }
-    // Store as pending — app home will render the invite banner
-    pendingInvite={trip};
     window.history.replaceState({},'',window.location.pathname);
-    // renderAppHome is called in init after this, so the banner will appear
+    // Already accepted this invite before — skip the modal and open the trip directly
+    if(trip._myCrewKey){_pendingActiveId=trip.id;return;}
+    // First time seeing this invite — show the picker modal
+    pendingInvite={trip};
   }catch(e){console.warn('bad invite',e);}
 }
 
@@ -3725,11 +3726,22 @@ checkInviteParam();
 // 3. Route to the right screen
 renderAppHome();
 if(pendingInvite){
-  goTo('s-app-home'); // invite banner shows inside app home
+  goTo('s-app-home');
 }else if(restored&&restored.activeId){
-  // User had an active trip — store it so onAuthStateChanged can auto-open after sign-in
-  _pendingActiveId=restored.activeId;
-  _goTo('s-app-home');
+  const _initTrip=TRIPS.find(t=>t.id===restored.activeId);
+  if(_initTrip&&_initTrip._myCrewKey){
+    // Enough info to open the trip immediately — no auth wait needed
+    activateTrip(_initTrip);
+    const _initCrew=CREW.find(c=>c.key===_initTrip._myCrewKey)||CREW[0];
+    selCrew=_initCrew;selPayer=_initCrew;splitKeys=CREW.map(c=>c.key);
+    // Store so onAuthStateChanged can re-identify by googleUid once signed in
+    _pendingActiveId=restored.activeId;
+    _enterTrip();
+    _goTo('s-home');
+  }else{
+    _pendingActiveId=restored.activeId;
+    _goTo('s-app-home');
+  }
 }else{
   _goTo('s-app-home');
 }
