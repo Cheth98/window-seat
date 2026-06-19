@@ -1261,16 +1261,27 @@ _fbAuth.onAuthStateChanged(user=>{
   // Auto-open active trip on sign-in (PWA home screen launch) — Google users only
   if(_googleUser&&_pendingActiveId&&!_authGateCb){
     const tid=_pendingActiveId;_pendingActiveId=null;
-    const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
-    if(trip){
-      if(!Array.isArray(trip.crew))trip.crew=[];
-      activateTrip(trip);
+    if(T&&T.id===tid){
+      // Trip was already opened at init — just re-identify crew by Google UID.
+      // Do NOT call enterTrip() here: that would fbSaveTrip(T) with potentially
+      // stale localStorage data before the Firebase listener has had a chance to
+      // update T with the latest remote state, wiping real data from Firebase.
       const byUid=CREW.find(c=>c.googleUid===_googleUser.uid);
-      const storedKey=trip._myCrewKey;
-      selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
-      if(!selCrew)selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
-      selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
-      enterTrip();
+      const storedKey=T._myCrewKey;
+      const identified=byUid||(storedKey&&CREW.find(c=>c.key===storedKey));
+      if(identified){selCrew=identified;selPayer=identified;renderYouAreChip();}
+    }else{
+      const trip=TRIPS.find(t=>t.id===tid)||TRIPS[0];
+      if(trip){
+        if(!Array.isArray(trip.crew))trip.crew=[];
+        activateTrip(trip);
+        const byUid=CREW.find(c=>c.googleUid===_googleUser.uid);
+        const storedKey=trip._myCrewKey;
+        selCrew=byUid||(storedKey&&CREW.find(c=>c.key===storedKey))||CREW[0]||selCrew;
+        if(!selCrew)selCrew={key:'_guest',name:'Guest',color:'#534AB7',bg:'#EEEDFE',prop:'coffee',status:''};
+        selPayer=selCrew;splitKeys=CREW.map(c=>c.key);
+        enterTrip();
+      }
     }
   }
   renderGoogleAuthUI();
